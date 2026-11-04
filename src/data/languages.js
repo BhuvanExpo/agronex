@@ -1,0 +1,367 @@
+/**
+ * Centralized multilingual dictionary for AgroNex - Tomato Leaf Doctor
+ * Specifically built for detecting Tuta absoluta and Liriomyza in Tomato plants.
+ * Clean, minimalist: Icon with maximum 3 words under it.
+ * Supporting: English (en), Kannada (kn), Hindi (hi), Telugu (te)
+ */
+
+export const SUPPORTED_LANGUAGES = [
+  {
+    id: 'en',
+    code: 'en-IN',
+    name: 'English',
+    nativeName: 'English',
+    icon: 'translate',
+  },
+  {
+    id: 'kn',
+    code: 'kn-IN',
+    name: 'Kannada',
+    nativeName: 'ಕನ್ನಡ',
+    icon: 'flower',
+  },
+  {
+    id: 'hi',
+    code: 'hi-IN',
+    name: 'Hindi',
+    nativeName: 'हिन्दी',
+    icon: 'sprout',
+  },
+  {
+    id: 'te',
+    code: 'te-IN',
+    name: 'Telugu',
+    nativeName: 'తెలుగు',
+    icon: 'grain',
+  },
+];
+
+export const UI_STRINGS = {
+  en: {
+    // App & Language Selection
+    appTitle: 'AgroNex Tomato',
+    chooseLanguage: 'Select Language',
+    continue: 'Continue',
+
+    // TalkBack
+    talkbackOn: 'TalkBack ON',
+    talkbackOff: 'TalkBack OFF',
+    talkbackFab: 'TalkBack',
+    talkbackEnabledVoice: 'TalkBack on. Tap once to hear, tap again to open.',
+    talkbackDisabledVoice: 'TalkBack off.',
+    tapAgainToOpen: 'Tap again to proceed.',
+
+    // Action Dashboard (Max 3 words under icon)
+    take4Photos: 'Take Photos',
+    upload4Photos: 'Upload Photos',
+    sampleTuta: 'Tuta Absoluta',
+    sampleLiriomyza: 'Liriomyza Miner',
+
+    // 4 Leaf Photo Slots (Infected Tomato Leaves)
+    slot1: 'Leaf 1',
+    slot2: 'Leaf 2',
+    slot3: 'Leaf 3',
+    slot4: 'Leaf 4',
+    addLeafPhoto: 'Add Leaf',
+    tapToSnap: 'Take Leaf Photo',
+    confirm4Photos: 'Confirm 4 Photos',
+    need4PhotosAlert: 'Please add all 4 infected leaf photos.',
+
+    // Screen 3 Preview (Max 3 words)
+    previewTitle: '4 Leaf Photos',
+    retakeAll: 'Retake Photos',
+    proceedToDetails: 'Enter Farm Data',
+
+    // Screen 4 Farmer Details Screen (Max 3 words)
+    farmerDataTitle: 'Farmer Field Data',
+    landSizeTitle: 'Land Size',
+    plantAgeTitle: 'Plant Age',
+    plantTypeTitle: 'Tomato Variety',
+    analyzeTomato: 'Diagnose Tomato',
+
+    // Land Options (Max 3 words)
+    landHalfAcre: '0.5 Acre',
+    land1Acre: '1 Acre',
+    land2Acres: '2 Acres',
+    land5Acres: '5+ Acres',
+
+    // Age Options (Max 3 words)
+    ageSeedling: '< 20 Days',
+    ageVegetative: '20-40 Days',
+    ageFlowering: '40-60 Days',
+    ageFruiting: '> 60 Days',
+
+    // Variety Options (Max 3 words)
+    varietyHybrid: 'Hybrid Tomato',
+    varietyDesi: 'Desi (Country)',
+    varietyPolyhouse: 'Polyhouse Tomato',
+    varietyOpenField: 'Open Field',
+
+    // Screen 5 Loading (Max 3 words)
+    analyzingTitle: 'Detecting Leaf Miner',
+    analyzingVoice: 'Analyzing four tomato leaf photos for Tuta absoluta and Liriomyza, please wait.',
+
+    // Screen 6 Advisory (Max 3 words)
+    diagnosisTitle: 'Tomato Diagnosis',
+    listenAdvice: '🔊 Listen Advice',
+    stopAdvice: '⏹ Stop Advice',
+    organicTitle: 'Organic Action',
+    chemicalTitle: 'Chemical Spray',
+    irrigationTitle: 'Irrigation Tips',
+    diagnoseAnother: 'Diagnose Another',
+
+    // Permissions
+    cameraPermTitle: 'Camera Required',
+    cameraPermMessage: 'Enable camera access in settings to capture leaf photos.',
+    galleryPermTitle: 'Gallery Required',
+    galleryPermMessage: 'Enable gallery access in settings to pick 4 leaf photos.',
+    grantPermission: 'Allow',
+    cancel: 'Cancel',
+  },
+
+  kn: {
+    // App & Language Selection
+    appTitle: 'ಟೊಮೆಟೊ ಡಾಕ್ಟರ್',
+    chooseLanguage: 'ಭಾಷೆ ಆಯ್ಕೆಮಾಡಿ',
+    continue: 'ಮುಂದುವರಿಯಿರಿ',
+
+    // TalkBack
+    talkbackOn: 'ಟಾಕ್‌ಬ್ಯಾಕ್ ಆನ್',
+    talkbackOff: 'ಟಾಕ್‌ಬ್ಯಾಕ್ ಆಫ್',
+    talkbackFab: 'ಧ್ವನಿ',
+    talkbackEnabledVoice: 'ಟಾಕ್‌ಬ್ಯಾಕ್ ಆನ್ ಆಗಿದೆ. ಒಮ್ಮೆ ಒತ್ತಿ ಕೇಳಿ, ಮುಂದುವರಿಯಲು ಮತ್ತೆ ಒತ್ತಿ.',
+    talkbackDisabledVoice: 'ಟಾಕ್‌ಬ್ಯಾಕ್ ಆಫ್ ಆಗಿದೆ.',
+    tapAgainToOpen: 'ಮುಂದುವರಿಯಲು ಮತ್ತೆ ಒತ್ತಿ.',
+
+    // Action Dashboard (Max 3 words under icon)
+    take4Photos: 'ಫೋಟೋ ತೆಗೆಯಿರಿ',
+    upload4Photos: 'ಫೋಟೋ ಆಯ್ಕೆಮಾಡಿ',
+    sampleTuta: 'ತುತಾ ಅಬ್ಸೊಲ್ಯೂಟ',
+    sampleLiriomyza: 'ಲಿರಿಯೊಮೈಜಾ ರೋಗ',
+
+    // 4 Leaf Photo Slots (Infected Tomato Leaves)
+    slot1: 'ಎಲೆ 1',
+    slot2: 'ಎಲೆ 2',
+    slot3: 'ಎಲೆ 3',
+    slot4: 'ಎಲೆ 4',
+    addLeafPhoto: 'ಎಲೆ ಸೇರಿಸಿ',
+    tapToSnap: 'ಎಲೆಯ ಫೋಟೋ ತೆಗೆಯಿರಿ',
+    confirm4Photos: '4 ಫೋಟೋ ಖಚಿತಪಡಿಸಿ',
+    need4PhotosAlert: 'ದಯವಿಟ್ಟು 4 ರೋಗಗ್ರಸ್ತ ಎಲೆಗಳ ಫೋಟೋ ಪೂರ್ಣಗೊಳಿಸಿ.',
+
+    // Screen 3 Preview (Max 3 words)
+    previewTitle: '4 ಎಲೆಗಳ ಫೋಟೋ',
+    retakeAll: 'ಮತ್ತೆ ತೆಗೆಯಿರಿ',
+    proceedToDetails: 'ಮಾಹಿತಿ ನೀಡಿ',
+
+    // Screen 4 Farmer Details Screen (Max 3 words)
+    farmerDataTitle: 'ರೈತರ ಜಮೀನು ಮಾಹಿತಿ',
+    landSizeTitle: 'ಜಮೀನಿನ ವಿಸ್ತೀರ್ಣ',
+    plantAgeTitle: 'ಗಿಡದ ವಯಸ್ಸು',
+    plantTypeTitle: 'ಟೊಮೆಟೊ ತಳಿ',
+    analyzeTomato: 'ರೋಗ ಪತ್ತೆಹಚ್ಚಿ',
+
+    // Land Options (Max 3 words)
+    landHalfAcre: '0.5 ಎಕರೆ',
+    land1Acre: '1 ಎಕರೆ',
+    land2Acres: '2 ಎಕರೆ',
+    land5Acres: '5+ ಎಕರೆ',
+
+    // Age Options (Max 3 words)
+    ageSeedling: '< 20 ದಿನ',
+    ageVegetative: '20-40 ದಿನ',
+    ageFlowering: '40-60 ದಿನ',
+    ageFruiting: '> 60 ದಿನ',
+
+    // Variety Options (Max 3 words)
+    varietyHybrid: 'ಹೈಬ್ರಿಡ್ ಟೊಮೆಟೊ',
+    varietyDesi: 'ನಾಟಿ ಟೊಮೆಟೊ',
+    varietyPolyhouse: 'ಪಾಲಿಹೌಸ್ ಬೆಳೆ',
+    varietyOpenField: 'ಬಯಲು ಸೀಮೆ',
+
+    // Screen 5 Loading (Max 3 words)
+    analyzingTitle: 'ಪರೀಕ್ಷೆ ನಡೆಯುತ್ತಿದೆ',
+    analyzingVoice: 'ನಾಲ್ಕು ಎಲೆಗಳ ಚಿತ್ರಗಳನ್ನು ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ, ದಯವಿಟ್ಟು ಕಾಯಿರಿ.',
+
+    // Screen 6 Advisory (Max 3 words)
+    diagnosisTitle: 'ಟೊಮೆಟೊ ರೋಗ ವರದಿ',
+    listenAdvice: '🔊 ಸಲಹೆ ಕೇಳಿ',
+    stopAdvice: '⏹ ಧ್ವನಿ ನಿಲ್ಲಿಸಿ',
+    organicTitle: 'ಸಾವಯವ ಪರಿಹಾರ',
+    chemicalTitle: 'ರಾಸಾಯನಿಕ ಮದ್ದು',
+    irrigationTitle: 'ನೀರಾವರಿ ಸಲಹೆ',
+    diagnoseAnother: 'ಇನ್ನೊಂದು ಪರೀಕ್ಷಿಸಿ',
+
+    // Permissions
+    cameraPermTitle: 'ಕ್ಯಾಮೆರಾ ಅನುಮತಿ',
+    cameraPermMessage: 'ಎಲೆಯ ಫೋಟೋ ತೆಗೆಯಲು ಕ್ಯಾಮೆರಾ ಅನುಮತಿ ನೀಡಿ.',
+    galleryPermTitle: 'ಗ್ಯಾಲರಿ ಅನುಮತಿ',
+    galleryPermMessage: '4 ಎಲೆಗಳ ಫೋಟೋ ಆಯ್ಕೆಮಾಡಲು ಗ್ಯಾಲರಿ ಅನುಮತಿ ನೀಡಿ.',
+    grantPermission: 'ಅನುಮತಿಸಿ',
+    cancel: 'ರದ್ದುಮಾಡಿ',
+  },
+
+  hi: {
+    // App & Language Selection
+    appTitle: 'टमाटर डॉक्टर',
+    chooseLanguage: 'भाषा चुनें',
+    continue: 'आगे बढ़ें',
+
+    // TalkBack
+    talkbackOn: 'टॉकबैक चालू',
+    talkbackOff: 'टॉकबैक बंद',
+    talkbackFab: 'टॉकबैक',
+    talkbackEnabledVoice: 'टॉकबैक चालू है। सुनने के लिए एक बार छुएं, आगे बढ़ने के लिए दोबारा दबाएं।',
+    talkbackDisabledVoice: 'टॉकबैक बंद है।',
+    tapAgainToOpen: 'आगे बढ़ने के लिए दोबारा दबाएं।',
+
+    // Action Dashboard (Max 3 words under icon)
+    take4Photos: 'फोटो खींचें',
+    upload4Photos: 'फोटो चुनें',
+    sampleTuta: 'ट्यूटा एब्सोल्युटा',
+    sampleLiriomyza: 'लिरियोमाइज़ा कीट',
+
+    // 4 Leaf Photo Slots (Infected Tomato Leaves)
+    slot1: 'पत्ती 1',
+    slot2: 'पत्ती 2',
+    slot3: 'पत्ती 3',
+    slot4: 'पत्ती 4',
+    addLeafPhoto: 'पत्ती जोड़ें',
+    tapToSnap: 'पत्ती फोटो लें',
+    confirm4Photos: '4 फोटो पुष्टि',
+    need4PhotosAlert: 'कृपया सभी 4 संक्रमित पत्तियों की फोटो पूरी करें।',
+
+    // Screen 3 Preview (Max 3 words)
+    previewTitle: '4 पत्ती फोटो',
+    retakeAll: 'दोबारा फोटो लें',
+    proceedToDetails: 'खेत विवरण दें',
+
+    // Screen 4 Farmer Details Screen (Max 3 words)
+    farmerDataTitle: 'किसान खेत विवरण',
+    landSizeTitle: 'खेत का रकबा',
+    plantAgeTitle: 'पौधे की उम्र',
+    plantTypeTitle: 'टमाटर की किस्म',
+    analyzeTomato: 'रोग पहचानें',
+
+    // Land Options (Max 3 words)
+    landHalfAcre: '0.5 एकड़',
+    land1Acre: '1 एकड़',
+    land2Acres: '2 एकड़',
+    land5Acres: '5+ एकड़',
+
+    // Age Options (Max 3 words)
+    ageSeedling: '< 20 दिन',
+    ageVegetative: '20-40 दिन',
+    ageFlowering: '40-60 दिन',
+    ageFruiting: '> 60 दिन',
+
+    // Variety Options (Max 3 words)
+    varietyHybrid: 'हाइब्रिड टमाटर',
+    varietyDesi: 'देसी टमाटर',
+    varietyPolyhouse: 'पॉलीहाउस टमाटर',
+    varietyOpenField: 'खुला खेत',
+
+    // Screen 5 Loading (Max 3 words)
+    analyzingTitle: 'जांच जारी है',
+    analyzingVoice: 'चारों टमाटर की पत्तियों की जांच हो रही है, कृपया प्रतीक्षा करें।',
+
+    // Screen 6 Advisory (Max 3 words)
+    diagnosisTitle: 'टमाटर रोग रिपोर्ट',
+    listenAdvice: '🔊 सलाह सुनें',
+    stopAdvice: '⏹ आवाज़ रोकें',
+    organicTitle: 'जैविक उपचार',
+    chemicalTitle: 'रासायनिक दवा',
+    irrigationTitle: 'सिंचाई सुझाव',
+    diagnoseAnother: 'दूसरी जांच करें',
+
+    // Permissions
+    cameraPermTitle: 'कैमरा अनुमति',
+    cameraPermMessage: 'पत्ती की फोटो लेने के लिए कैमरा अनुमति दें।',
+    galleryPermTitle: 'गैलरी अनुमति',
+    galleryPermMessage: '4 फोटो चुनने के लिए गैलरी अनुमति दें।',
+    grantPermission: 'अनुमति दें',
+    cancel: 'रद्द करें',
+  },
+
+  te: {
+    // App & Language Selection
+    appTitle: 'టమోటా డాక్టర్',
+    chooseLanguage: 'భాషను ఎంచుకోండి',
+    continue: 'ముందుకు సాగండి',
+
+    // TalkBack
+    talkbackOn: 'టాక్‌బ్యాక్ ఆన్',
+    talkbackOff: 'టాక్‌బ్యాక్ ఆఫ్',
+    talkbackFab: 'వాయిస్',
+    talkbackEnabledVoice: 'టాక్‌బ్యాక్ ఆన్ అయింది. వినడానికి ఒకసారి, ముందుకు సాగడానికి మళ్లీ నొక్కండి.',
+    talkbackDisabledVoice: 'టాక్‌బ్యాక్ ఆఫ్ అయింది.',
+    tapAgainToOpen: 'ముందుకు సాగడానికి మళ్లీ నొక్కండి.',
+
+    // Action Dashboard (Max 3 words under icon)
+    take4Photos: 'ఫోటోలు తీయండి',
+    upload4Photos: 'ఫోటోలు ఎంచుకోండి',
+    sampleTuta: 'టుటా అబ్సొల్యూటా',
+    sampleLiriomyza: 'లిరియోమైజా తెగులు',
+
+    // 4 Leaf Photo Slots (Infected Tomato Leaves)
+    slot1: 'ఆకు 1',
+    slot2: 'ఆకు 2',
+    slot3: 'ఆకు 3',
+    slot4: 'ఆకు 4',
+    addLeafPhoto: 'ఆకు చేర్చండి',
+    tapToSnap: 'ఆకు ఫోటో తీయండి',
+    confirm4Photos: '4 ఫోటోలు ఖరారు',
+    need4PhotosAlert: 'దయచేసి 4 తెగులు సోకిన ఆకుల ఫోటోలను పూర్తి చేయండి.',
+
+    // Screen 3 Preview (Max 3 words)
+    previewTitle: '4 ఆకుల ఫోటోలు',
+    retakeAll: 'మళ్లీ తీయండి',
+    proceedToDetails: 'పొలం వివరాలు',
+
+    // Screen 4 Farmer Details Screen (Max 3 words)
+    farmerDataTitle: 'రైతు పొలం వివరాలు',
+    landSizeTitle: 'పొలం విస్తీర్ణం',
+    plantAgeTitle: 'మొక్క వయస్సు',
+    plantTypeTitle: 'టమోటా రకం',
+    analyzeTomato: 'తెగులు గుర్తించండి',
+
+    // Land Options (Max 3 words)
+    landHalfAcre: '0.5 ఎకరం',
+    land1Acre: '1 ఎకరం',
+    land2Acres: '2 ఎకరాలు',
+    land5Acres: '5+ ఎకరాలు',
+
+    // Age Options (Max 3 words)
+    ageSeedling: '< 20 రోజులు',
+    ageVegetative: '20-40 రోజులు',
+    ageFlowering: '40-60 రోజులు',
+    ageFruiting: '> 60 రోజులు',
+
+    // Variety Options (Max 3 words)
+    varietyHybrid: 'హైబ్రిడ్ టమోటా',
+    varietyDesi: 'నాటు టమోటా',
+    varietyPolyhouse: 'పాలీహౌస్ టమోటా',
+    varietyOpenField: 'బహిరంగ పొలం',
+
+    // Screen 5 Loading (Max 3 words)
+    analyzingTitle: 'పరిశీలిస్తున్నాము',
+    analyzingVoice: 'నాలుగు టమోటా ఆకులను పరిశీలిస్తున్నాము, దయచేసి వేచి ఉండండి.',
+
+    // Screen 6 Advisory (Max 3 words)
+    diagnosisTitle: 'టమోటా తెగులు నివేదిక',
+    listenAdvice: '🔊 సలహా వినండి',
+    stopAdvice: '⏹ ఆడియో ఆపండి',
+    organicTitle: 'సేంద్రీయ చర్య',
+    chemicalTitle: 'రసాయన మందు',
+    irrigationTitle: 'నీటి యాజమాన్యం',
+    diagnoseAnother: 'మరొకటి పరిశీలించండి',
+
+    // Permissions
+    cameraPermTitle: 'కెమెరా అనుమతి',
+    cameraPermMessage: 'ఆకు ఫోటోలు తీయడానికి కెమెరా అనుమతి ఇవ్వండి.',
+    galleryPermTitle: 'గ్యాలరీ అనుమతి',
+    galleryPermMessage: '4 ఫోటోలు ఎంచుకోవడానికి గ్యాలరీ అనుమతి ఇవ్వండి.',
+    grantPermission: 'అనుమతించు',
+    cancel: 'రద్దు చేయండి',
+  },
+};
