@@ -14,18 +14,22 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, typography } from '../utils/theme';
 import { UI_STRINGS } from '../data/languages';
 import { speakFarmerAdvice, stopSpeech } from '../utils/audio';
+import { runTomatoModelInference } from '../utils/modelInference';
 
 const { width } = Dimensions.get('window');
 
 export default function LoadingScreen({
   images = [],
-  currentLanguage,
+  currentLanguage = 'en',
+  farmerData = null,
+  fallbackHint = null,
   onAnalysisComplete,
 }) {
   const strings = UI_STRINGS[currentLanguage] || UI_STRINGS.en;
   const scanLineAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    let isMounted = true;
     speakFarmerAdvice(strings.analyzingVoice, currentLanguage);
 
     const scanningAnimation = Animated.loop(
@@ -46,13 +50,34 @@ export default function LoadingScreen({
     );
     scanningAnimation.start();
 
-    const timer = setTimeout(() => {
-      stopSpeech();
-      onAnalysisComplete();
-    }, 2300);
+    const startTime = Date.now();
+
+    // Call PyTorch ResNet-50 inference asynchronously with uploaded images & farmer data (including language)
+    const enrichedFarmerData = { ...(farmerData || {}), language: currentLanguage };
+    runTomatoModelInference(images, enrichedFarmerData, fallbackHint)
+      .then((inferenceResult) => {
+        if (!isMounted) return;
+        const elapsed = Date.now() - startTime;
+        const minScanDuration = 2200; // Ensure farmers see the high-tech scanning laser
+        const remainingDelay = Math.max(100, minScanDuration - elapsed);
+
+        setTimeout(() => {
+          if (isMounted) {
+            stopSpeech();
+            onAnalysisComplete(inferenceResult);
+          }
+        }, remainingDelay);
+      })
+      .catch((err) => {
+        console.warn('Inference pipeline error:', err);
+        if (isMounted) {
+          stopSpeech();
+          onAnalysisComplete(null);
+        }
+      });
 
     return () => {
-      clearTimeout(timer);
+      isMounted = false;
       scanningAnimation.stop();
       stopSpeech();
     };
@@ -67,17 +92,20 @@ export default function LoadingScreen({
         {/* 4 Images Scanning Grid */}
         <View style={styles.scanBox}>
           <View style={styles.imagesMiniGrid}>
-            {images.slice(0, 4).map((imgUri, i) => (
-              <View key={i} style={styles.miniSlot}>
-                {imgUri ? (
-                  <Image source={{ uri: imgUri }} style={styles.miniImg} resizeMode="cover" />
-                ) : (
-                  <View style={styles.miniPlaceholder}>
-                    <MaterialCommunityIcons name="leaf" size={24} color="#34D399" />
-                  </View>
-                )}
-              </View>
-            ))}
+            {images.slice(0, 4).map((item, i) => {
+              const imgUri = typeof item === 'string' ? item : item?.uri;
+              return (
+                <View key={i} style={styles.miniSlot}>
+                  {imgUri ? (
+                    <Image source={{ uri: imgUri }} style={styles.miniImg} resizeMode="cover" />
+                  ) : (
+                    <View style={styles.miniPlaceholder}>
+                      <MaterialCommunityIcons name="leaf" size={24} color="#34D399" />
+                    </View>
+                  )}
+                </View>
+              );
+            })}
           </View>
 
           {/* Laser Scanning Line */}
@@ -96,6 +124,7 @@ export default function LoadingScreen({
         {/* Indicator */}
         <View style={styles.indicatorWrap}>
           <ActivityIndicator size="large" color="#34D399" />
+          <Text style={styles.subtitleText}>PyTorch ResNet-50</Text>
         </View>
       </View>
     </SafeAreaView>
@@ -171,5 +200,13 @@ const styles = StyleSheet.create({
   },
   indicatorWrap: {
     marginTop: 28,
+    alignItems: 'center',
+  },
+  subtitleText: {
+    marginTop: 10,
+    color: '#34D399',
+    fontSize: 14,
+    fontWeight: typography.weightBold,
+    letterSpacing: 0.5,
   },
 });

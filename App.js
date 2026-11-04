@@ -19,6 +19,7 @@ export default function App() {
   // 4 Plant Photos: [Top Leaf, Under Leaf, Stem, Whole Plant]
   const [selectedImages, setSelectedImages] = useState([]);
   const [activeDiseaseId, setActiveDiseaseId] = useState('tuta_absoluta');
+  const [analysisResult, setAnalysisResult] = useState(null);
 
   // Farmer Field Details: land, plant age, variety
   const [farmerData, setFarmerData] = useState({
@@ -75,12 +76,8 @@ export default function App() {
 
     if (diseaseIdHint) {
       setActiveDiseaseId(diseaseIdHint);
-    } else {
-      // Alternate between Tuta absoluta and Liriomyza miner for tomato leaf analysis
-      const tomatoDiseases = ['tuta_absoluta', 'liriomyza_miner'];
-      const chosen = tomatoDiseases[Math.floor(Math.random() * tomatoDiseases.length)];
-      setActiveDiseaseId(chosen);
     }
+    setAnalysisResult(null);
 
     setCurrentScreen('preview');
   };
@@ -106,8 +103,14 @@ export default function App() {
   };
 
   // Screen 5 -> Screen 6: Model analysis finished
-  const handleAnalysisComplete = () => {
+  const handleAnalysisComplete = (result = null) => {
     stopSpeech();
+    if (result) {
+      if (result.disease_id) {
+        setActiveDiseaseId(result.disease_id);
+      }
+      setAnalysisResult(result);
+    }
     setCurrentScreen('advisory');
   };
 
@@ -179,6 +182,8 @@ export default function App() {
         <LoadingScreen
           images={selectedImages}
           currentLanguage={selectedLanguage}
+          farmerData={farmerData}
+          fallbackHint={activeDiseaseId}
           onAnalysisComplete={handleAnalysisComplete}
         />
       )}
@@ -187,6 +192,7 @@ export default function App() {
         <AdvisoryScreen
           images={selectedImages}
           diseaseId={activeDiseaseId}
+          analysisResult={analysisResult}
           farmerData={farmerData}
           currentLanguage={selectedLanguage}
           onBackToHome={handleBackToHome}

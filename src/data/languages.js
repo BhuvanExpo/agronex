@@ -52,24 +52,29 @@ export const UI_STRINGS = {
     tapAgainToOpen: 'Tap again to proceed.',
 
     // Action Dashboard (Max 3 words under icon)
-    take4Photos: 'Take Photos',
-    upload4Photos: 'Upload Photos',
+    takePhoto: 'Take Photo',
+    uploadPhoto: 'Upload Photo',
+    take4Photos: 'Take Photo',
+    upload4Photos: 'Upload Photo',
     sampleTuta: 'Tuta Absoluta',
     sampleLiriomyza: 'Liriomyza Miner',
+    sampleHealthy: 'Healthy Tomato',
+    sampleMixed: 'Mixed Attack',
+    aiModelTrained: 'AI Model Verified',
 
-    // 4 Leaf Photo Slots (Infected Tomato Leaves)
-    slot1: 'Leaf 1',
-    slot2: 'Leaf 2',
-    slot3: 'Leaf 3',
-    slot4: 'Leaf 4',
+    // Leaf Photo Slot
+    slot1: 'Infected Leaf',
     addLeafPhoto: 'Add Leaf',
     tapToSnap: 'Take Leaf Photo',
-    confirm4Photos: 'Confirm 4 Photos',
-    need4PhotosAlert: 'Please add all 4 infected leaf photos.',
+    confirmPhoto: 'Confirm Photo',
+    confirm4Photos: 'Confirm Photo',
+    needPhotoAlert: 'Please select an infected leaf photo.',
+    need4PhotosAlert: 'Please select an infected leaf photo.',
 
     // Screen 3 Preview (Max 3 words)
-    previewTitle: '4 Leaf Photos',
-    retakeAll: 'Retake Photos',
+    previewTitle: 'Infected Leaf',
+    retakePhoto: 'Retake Photo',
+    retakeAll: 'Retake Photo',
     proceedToDetails: 'Enter Farm Data',
 
     // Screen 4 Farmer Details Screen (Max 3 words)
@@ -98,8 +103,8 @@ export const UI_STRINGS = {
     varietyOpenField: 'Open Field',
 
     // Screen 5 Loading (Max 3 words)
-    analyzingTitle: 'Detecting Leaf Miner',
-    analyzingVoice: 'Analyzing four tomato leaf photos for Tuta absoluta and Liriomyza, please wait.',
+    analyzingTitle: 'Detecting Pest',
+    analyzingVoice: 'Analyzing infected tomato leaf for Tuta absoluta and Liriomyza, please wait.',
 
     // Screen 6 Advisory (Max 3 words)
     diagnosisTitle: 'Tomato Diagnosis',
@@ -112,9 +117,9 @@ export const UI_STRINGS = {
 
     // Permissions
     cameraPermTitle: 'Camera Required',
-    cameraPermMessage: 'Enable camera access in settings to capture leaf photos.',
+    cameraPermMessage: 'Enable camera access in settings to capture leaf photo.',
     galleryPermTitle: 'Gallery Required',
-    galleryPermMessage: 'Enable gallery access in settings to pick 4 leaf photos.',
+    galleryPermMessage: 'Enable gallery access in settings to pick a leaf photo.',
     grantPermission: 'Allow',
     cancel: 'Cancel',
   },
@@ -134,23 +139,28 @@ export const UI_STRINGS = {
     tapAgainToOpen: 'ಮುಂದುವರಿಯಲು ಮತ್ತೆ ಒತ್ತಿ.',
 
     // Action Dashboard (Max 3 words under icon)
+    takePhoto: 'ಫೋಟೋ ತೆಗೆಯಿರಿ',
+    uploadPhoto: 'ಫೋಟೋ ಆಯ್ಕೆಮಾಡಿ',
     take4Photos: 'ಫೋಟೋ ತೆಗೆಯಿರಿ',
     upload4Photos: 'ಫೋಟೋ ಆಯ್ಕೆಮಾಡಿ',
     sampleTuta: 'ತುತಾ ಅಬ್ಸೊಲ್ಯೂಟ',
     sampleLiriomyza: 'ಲಿರಿಯೊಮೈಜಾ ರೋಗ',
+    sampleHealthy: 'ಆರೋಗ್ಯಕರ ಟೊಮೆಟೊ',
+    sampleMixed: 'ಸಂಯುಕ್ತ ಬಾಧೆ',
+    aiModelTrained: 'AI ಮಾದರಿ ತಪಾಸಣೆ',
 
-    // 4 Leaf Photo Slots (Infected Tomato Leaves)
-    slot1: 'ಎಲೆ 1',
-    slot2: 'ಎಲೆ 2',
-    slot3: 'ಎಲೆ 3',
-    slot4: 'ಎಲೆ 4',
+    // Leaf Photo Slot
+    slot1: 'ರೋಗಗ್ರಸ್ತ ಎಲೆ',
     addLeafPhoto: 'ಎಲೆ ಸೇರಿಸಿ',
     tapToSnap: 'ಎಲೆಯ ಫೋಟೋ ತೆಗೆಯಿರಿ',
-    confirm4Photos: '4 ಫೋಟೋ ಖಚಿತಪಡಿಸಿ',
-    need4PhotosAlert: 'ದಯವಿಟ್ಟು 4 ರೋಗಗ್ರಸ್ತ ಎಲೆಗಳ ಫೋಟೋ ಪೂರ್ಣಗೊಳಿಸಿ.',
+    confirmPhoto: 'ಫೋಟೋ ಖಚಿತಪಡಿಸಿ',
+    confirm4Photos: 'ಫೋಟೋ ಖಚಿತಪಡಿಸಿ',
+    needPhotoAlert: 'ದಯವಿಟ್ಟು ರೋಗಗ್ರಸ್ತ ಎಲೆಯ ಫೋಟೋ ಆಯ್ಕೆಮಾಡಿ.',
+    need4PhotosAlert: 'ದಯವಿಟ್ಟು ರೋಗಗ್ರಸ್ತ ಎಲೆಯ ಫೋಟೋ ಆಯ್ಕೆಮಾಡಿ.',
 
     // Screen 3 Preview (Max 3 words)
-    previewTitle: '4 ಎಲೆಗಳ ಫೋಟೋ',
+    previewTitle: 'ರೋಗಗ್ರಸ್ತ ಎಲೆ',
+    retakePhoto: 'ಮತ್ತೆ ತೆಗೆಯಿರಿ',
     retakeAll: 'ಮತ್ತೆ ತೆಗೆಯಿರಿ',
     proceedToDetails: 'ಮಾಹಿತಿ ನೀಡಿ',
 
@@ -181,7 +191,7 @@ export const UI_STRINGS = {
 
     // Screen 5 Loading (Max 3 words)
     analyzingTitle: 'ಪರೀಕ್ಷೆ ನಡೆಯುತ್ತಿದೆ',
-    analyzingVoice: 'ನಾಲ್ಕು ಎಲೆಗಳ ಚಿತ್ರಗಳನ್ನು ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ, ದಯವಿಟ್ಟು ಕಾಯಿರಿ.',
+    analyzingVoice: 'ಟೊಮೆಟೊ ಎಲೆಯ ಚಿತ್ರವನ್ನು ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ, ದಯವಿಟ್ಟು ಕಾಯಿರಿ.',
 
     // Screen 6 Advisory (Max 3 words)
     diagnosisTitle: 'ಟೊಮೆಟೊ ರೋಗ ವರದಿ',
@@ -196,7 +206,7 @@ export const UI_STRINGS = {
     cameraPermTitle: 'ಕ್ಯಾಮೆರಾ ಅನುಮತಿ',
     cameraPermMessage: 'ಎಲೆಯ ಫೋಟೋ ತೆಗೆಯಲು ಕ್ಯಾಮೆರಾ ಅನುಮತಿ ನೀಡಿ.',
     galleryPermTitle: 'ಗ್ಯಾಲರಿ ಅನುಮತಿ',
-    galleryPermMessage: '4 ಎಲೆಗಳ ಫೋಟೋ ಆಯ್ಕೆಮಾಡಲು ಗ್ಯಾಲರಿ ಅನುಮತಿ ನೀಡಿ.',
+    galleryPermMessage: 'ಎಲೆಯ ಫೋಟೋ ಆಯ್ಕೆಮಾಡಲು ಗ್ಯಾಲರಿ ಅನುಮತಿ ನೀಡಿ.',
     grantPermission: 'ಅನುಮತಿಸಿ',
     cancel: 'ರದ್ದುಮಾಡಿ',
   },
@@ -216,23 +226,28 @@ export const UI_STRINGS = {
     tapAgainToOpen: 'आगे बढ़ने के लिए दोबारा दबाएं।',
 
     // Action Dashboard (Max 3 words under icon)
+    takePhoto: 'फोटो खींचें',
+    uploadPhoto: 'फोटो चुनें',
     take4Photos: 'फोटो खींचें',
     upload4Photos: 'फोटो चुनें',
     sampleTuta: 'ट्यूटा एब्सोल्युटा',
     sampleLiriomyza: 'लिरियोमाइज़ा कीट',
+    sampleHealthy: 'स्वस्थ टमाटर',
+    sampleMixed: 'संयुक्त प्रकोप',
+    aiModelTrained: 'AI मॉडल परीक्षण',
 
-    // 4 Leaf Photo Slots (Infected Tomato Leaves)
-    slot1: 'पत्ती 1',
-    slot2: 'पत्ती 2',
-    slot3: 'पत्ती 3',
-    slot4: 'पत्ती 4',
+    // Leaf Photo Slot
+    slot1: 'संक्रमित पत्ती',
     addLeafPhoto: 'पत्ती जोड़ें',
     tapToSnap: 'पत्ती फोटो लें',
-    confirm4Photos: '4 फोटो पुष्टि',
-    need4PhotosAlert: 'कृपया सभी 4 संक्रमित पत्तियों की फोटो पूरी करें।',
+    confirmPhoto: 'फोटो पुष्टि करें',
+    confirm4Photos: 'फोटो पुष्टि करें',
+    needPhotoAlert: 'कृपया संक्रमित पत्ती की फोटो चुनें।',
+    need4PhotosAlert: 'कृपया संक्रमित पत्ती की फोटो चुनें।',
 
     // Screen 3 Preview (Max 3 words)
-    previewTitle: '4 पत्ती फोटो',
+    previewTitle: 'संक्रमित पत्ती',
+    retakePhoto: 'दोबारा फोटो लें',
     retakeAll: 'दोबारा फोटो लें',
     proceedToDetails: 'खेत विवरण दें',
 
@@ -263,7 +278,7 @@ export const UI_STRINGS = {
 
     // Screen 5 Loading (Max 3 words)
     analyzingTitle: 'जांच जारी है',
-    analyzingVoice: 'चारों टमाटर की पत्तियों की जांच हो रही है, कृपया प्रतीक्षा करें।',
+    analyzingVoice: 'टमाटर की पत्ती की जांच हो रही है, कृपया प्रतीक्षा करें।',
 
     // Screen 6 Advisory (Max 3 words)
     diagnosisTitle: 'टमाटर रोग रिपोर्ट',
@@ -278,7 +293,7 @@ export const UI_STRINGS = {
     cameraPermTitle: 'कैमरा अनुमति',
     cameraPermMessage: 'पत्ती की फोटो लेने के लिए कैमरा अनुमति दें।',
     galleryPermTitle: 'गैलरी अनुमति',
-    galleryPermMessage: '4 फोटो चुनने के लिए गैलरी अनुमति दें।',
+    galleryPermMessage: 'पत्ती की फोटो चुनने के लिए गैलरी अनुमति दें।',
     grantPermission: 'अनुमति दें',
     cancel: 'रद्द करें',
   },
@@ -298,23 +313,28 @@ export const UI_STRINGS = {
     tapAgainToOpen: 'ముందుకు సాగడానికి మళ్లీ నొక్కండి.',
 
     // Action Dashboard (Max 3 words under icon)
-    take4Photos: 'ఫోటోలు తీయండి',
-    upload4Photos: 'ఫోటోలు ఎంచుకోండి',
+    takePhoto: 'ఫోటో తీయండి',
+    uploadPhoto: 'ఫోటో ఎంచుకోండి',
+    take4Photos: 'ఫోటో తీయండి',
+    upload4Photos: 'ఫోటో ఎంచుకోండి',
     sampleTuta: 'టుటా అబ్సొల్యూటా',
     sampleLiriomyza: 'లిరియోమైజా తెగులు',
+    sampleHealthy: 'ఆరోగ్యకర టమోటా',
+    sampleMixed: 'మిశ్రమ తెగులు',
+    aiModelTrained: 'AI మోడల్ విశ్లేషణ',
 
-    // 4 Leaf Photo Slots (Infected Tomato Leaves)
-    slot1: 'ఆకు 1',
-    slot2: 'ఆకు 2',
-    slot3: 'ఆకు 3',
-    slot4: 'ఆకు 4',
+    // Leaf Photo Slot
+    slot1: 'సోకిన ఆకు',
     addLeafPhoto: 'ఆకు చేర్చండి',
     tapToSnap: 'ఆకు ఫోటో తీయండి',
-    confirm4Photos: '4 ఫోటోలు ఖరారు',
-    need4PhotosAlert: 'దయచేసి 4 తెగులు సోకిన ఆకుల ఫోటోలను పూర్తి చేయండి.',
+    confirmPhoto: 'ఫోటో ఖరారు',
+    confirm4Photos: 'ఫోటో ఖరారు',
+    needPhotoAlert: 'దయచేసి తెగులు సోకిన ఆకు ఫోటో ఎంచుకోండి.',
+    need4PhotosAlert: 'దయచేసి తెగులు సోకిన ఆకు ఫోటో ఎంచుకోండి.',
 
     // Screen 3 Preview (Max 3 words)
-    previewTitle: '4 ఆకుల ఫోటోలు',
+    previewTitle: 'సోకిన ఆకు',
+    retakePhoto: 'మళ్లీ తీయండి',
     retakeAll: 'మళ్లీ తీయండి',
     proceedToDetails: 'పొలం వివరాలు',
 
@@ -345,7 +365,7 @@ export const UI_STRINGS = {
 
     // Screen 5 Loading (Max 3 words)
     analyzingTitle: 'పరిశీలిస్తున్నాము',
-    analyzingVoice: 'నాలుగు టమోటా ఆకులను పరిశీలిస్తున్నాము, దయచేసి వేచి ఉండండి.',
+    analyzingVoice: 'టమోటా ఆకును పరిశీలిస్తున్నాము, దయచేసి వేచి ఉండండి.',
 
     // Screen 6 Advisory (Max 3 words)
     diagnosisTitle: 'టమోటా తెగులు నివేదిక',
@@ -358,9 +378,9 @@ export const UI_STRINGS = {
 
     // Permissions
     cameraPermTitle: 'కెమెరా అనుమతి',
-    cameraPermMessage: 'ఆకు ఫోటోలు తీయడానికి కెమెరా అనుమతి ఇవ్వండి.',
+    cameraPermMessage: 'ఆకు ఫోటో తీయడానికి కెమెరా అనుమతి ఇవ్వండి.',
     galleryPermTitle: 'గ్యాలరీ అనుమతి',
-    galleryPermMessage: '4 ఫోటోలు ఎంచుకోవడానికి గ్యాలరీ అనుమతి ఇవ్వండి.',
+    galleryPermMessage: 'ఆకు ఫోటో ఎంచుకోవడానికి గ్యాలరీ అనుమతి ఇవ్వండి.',
     grantPermission: 'అనుమతించు',
     cancel: 'రద్దు చేయండి',
   },

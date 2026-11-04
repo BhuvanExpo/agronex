@@ -26,7 +26,7 @@ export default function PreviewScreen({
   const strings = UI_STRINGS[currentLanguage] || UI_STRINGS.en;
   const activeLangObj = SUPPORTED_LANGUAGES.find((l) => l.id === currentLanguage);
 
-  const slotLabels = [strings.slot1, strings.slot2, strings.slot3, strings.slot4];
+  const selectedImageUri = images && images.length > 0 ? images[0] : null;
   const [focusedBtn, setFocusedBtn] = useState(null);
 
   const handleAccessibleAction = (btnId, spokenText, actionFn) => {
@@ -51,7 +51,7 @@ export default function PreviewScreen({
     <SafeAreaView style={styles.safeArea}>
       <Header
         title={strings.previewTitle}
-        onBack={() => handleAccessibleAction('back', strings.retakeAll, onRetake)}
+        onBack={() => handleAccessibleAction('back', strings.retakePhoto, onRetake)}
         activeLanguage={activeLangObj}
         onChangeLanguage={onChangeLanguage}
         showLanguageBadge={true}
@@ -60,31 +60,27 @@ export default function PreviewScreen({
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* 4 Infected Leaf Photos Grid (2x2) */}
-        <View style={styles.gridContainer}>
-          {slotLabels.map((label, index) => {
-            const uri = images[index];
+        {/* Single Infected Leaf Preview Card */}
+        <View style={styles.heroCard}>
+          {selectedImageUri ? (
+            <Image source={{ uri: selectedImageUri }} style={styles.cardImage} resizeMode="cover" />
+          ) : (
+            <View style={styles.placeholderBox}>
+              <MaterialCommunityIcons name="image-off" size={48} color={colors.slate400} />
+            </View>
+          )}
 
-            return (
-              <View key={index} style={styles.photoCard}>
-                {uri ? (
-                  <Image source={{ uri }} style={styles.cardImage} resizeMode="cover" />
-                ) : (
-                  <View style={styles.placeholderBox}>
-                    <MaterialCommunityIcons name="image-off" size={32} color={colors.slate400} />
-                  </View>
-                )}
-                {/* Clean Label - Max 2 words: e.g. Leaf 1 */}
-                <View style={styles.labelRow}>
-                  <MaterialCommunityIcons name="leaf" size={18} color="#059669" />
-                  <Text style={styles.labelText} numberOfLines={1}>
-                    {label}
-                  </Text>
-                  <MaterialCommunityIcons name="check-circle" size={16} color="#059669" />
-                </View>
-              </View>
-            );
-          })}
+          {/* Clean Label - Max 2-3 words */}
+          <View style={styles.labelRow}>
+            <View style={styles.badgeLeft}>
+              <MaterialCommunityIcons name="leaf" size={22} color="#059669" />
+              <Text style={styles.labelText}>{strings.slot1}</Text>
+            </View>
+            <View style={styles.badgeRight}>
+              <MaterialCommunityIcons name="check-circle" size={20} color="#059669" />
+              <Text style={styles.readyText}>Ready</Text>
+            </View>
+          </View>
         </View>
       </ScrollView>
 
@@ -92,11 +88,11 @@ export default function PreviewScreen({
       <View style={styles.bottomBar}>
         <TouchableOpacity
           style={[styles.retakeButton, focusedBtn === 'retake' && styles.btnFocused]}
-          onPress={() => handleAccessibleAction('retake', strings.retakeAll, onRetake)}
+          onPress={() => handleAccessibleAction('retake', strings.retakePhoto, onRetake)}
           activeOpacity={0.8}
         >
           <MaterialCommunityIcons name="camera-retake" size={24} color={colors.slate800} />
-          <Text style={styles.retakeText}>{strings.retakeAll}</Text>
+          <Text style={styles.retakeText}>{strings.retakePhoto}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -118,14 +114,75 @@ const styles = StyleSheet.create({
     backgroundColor: colors.slate50,
   },
   scrollContent: {
-    padding: 14,
-    paddingBottom: 110,
+    padding: 16,
+    paddingBottom: 150,
   },
-  gridContainer: {
+  heroCard: {
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    borderWidth: 3,
+    borderColor: colors.primaryDark,
+    overflow: 'hidden',
+    elevation: 4,
+    shadowColor: colors.shadowColor,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+  },
+  cardImage: {
+    width: '100%',
+    height: 380,
+    backgroundColor: colors.slate900,
+  },
+  placeholderBox: {
+    width: '100%',
+    height: 380,
+    backgroundColor: colors.slate100,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  labelRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
+    alignItems: 'center',
     justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: colors.white,
+    borderTopWidth: 2,
+    borderTopColor: colors.slate200,
+  },
+  badgeLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  badgeRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  labelText: {
+    fontSize: 18,
+    fontWeight: typography.weightBold,
+    color: colors.slate950,
+    marginLeft: 8,
+  },
+  readyText: {
+    fontSize: 15,
+    fontWeight: typography.weightBold,
+    color: '#059669',
+    marginLeft: 4,
+  },
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.white,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderTopWidth: 2,
+    borderTopColor: colors.slate300,
+    elevation: 8,
+    gap: 10,
   },
   photoCard: {
     width: '48%',

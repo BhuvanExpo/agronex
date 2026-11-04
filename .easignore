@@ -1,0 +1,11 @@
+# EAS Ignore file
+node_modules/
+.expo/
+dist/
+web-build/
+backend/
+*.pth
+*.log
+.env
+predict_pest.py
+tomato_classifier.py

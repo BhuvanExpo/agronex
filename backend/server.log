@@ -1,0 +1,76 @@
+[AgroNex] Compute Device: mps
+[AgroNex] Loading Pest Model from: /Users/bhuvangm/Dev/agronex/best_real_pest_model.pth
+[AgroNex] Model loaded successfully! (2-Head Multi-Label Sigmoid Architecture)
+
+=======================================================
+ AgroNex Production Tomato Pest Detection & LLM Advisory Server
+ URL: http://localhost:5001
+ Model: best_real_pest_model.pth (from predict_pest.py)
+ Health check: http://localhost:5001/health
+ Device: mps
+=======================================================
+
+[HTTP] 127.0.0.1 - "GET /health HTTP/1.1" 200 -
+[HTTP] 172.17.64.102 - "GET /health HTTP/1.1" 200 -
+[HTTP] 172.17.64.102 - "GET /health HTTP/1.1" 200 -
+[LLM] Calling Google Gemini API for tailored crop advisory...
+[PREDICTION + LLM] Analyzed 1 leaves for farm: 2_acres -> Tuta Absoluta (97%) | LLM: Google Gemini AI
+[HTTP] 172.17.64.102 - "POST /predict HTTP/1.1" 200 -
+[LLM] Calling Google Gemini API for tailored crop advisory...
+[PREDICTION + LLM] Analyzed 1 leaves for farm: 2_acres -> Liriomyza (100%) | LLM: Google Gemini AI
+[HTTP] 172.17.64.102 - "POST /predict HTTP/1.1" 200 -
+[LLM] Calling Google Gemini API for tailored crop advisory...
+[PREDICTION + LLM] Analyzed 1 leaves for farm: 2_acres -> Healthy (99%) | LLM: Google Gemini AI
+[HTTP] 172.17.64.102 - "POST /predict HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /health HTTP/1.1" 200 -
+[LLM] Calling Google Gemini API for tailored crop advisory...
+[PREDICTION + LLM] Analyzed 1 leaves for farm: 1_acre -> Liriomyza (93%) | LLM: Google Gemini AI
+[HTTP] 127.0.0.1 - "POST /predict HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /health HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /apple-touch-icon-precomposed.png HTTP/1.1" 404 -
+[HTTP] 127.0.0.1 - "GET /apple-touch-icon.png HTTP/1.1" 404 -
+[HTTP] 127.0.0.1 - "GET /favicon.ico HTTP/1.1" 404 -
+[HTTP] 127.0.0.1 - "GET /apple-touch-icon-precomposed.png HTTP/1.1" 404 -
+[HTTP] 127.0.0.1 - "GET /apple-touch-icon.png HTTP/1.1" 404 -
+[HTTP] 127.0.0.1 - "GET /favicon.ico HTTP/1.1" 404 -
+[HTTP] 127.0.0.1 - "GET /health HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /apple-touch-icon-precomposed.png HTTP/1.1" 404 -
+[HTTP] 127.0.0.1 - "GET /apple-touch-icon.png HTTP/1.1" 404 -
+[HTTP] 127.0.0.1 - "GET /favicon.ico HTTP/1.1" 404 -
+[HTTP] 127.0.0.1 - "GET /apple-touch-icon-precomposed.png HTTP/1.1" 404 -
+[HTTP] 127.0.0.1 - "GET /apple-touch-icon.png HTTP/1.1" 404 -
+[HTTP] 127.0.0.1 - "GET /favicon.ico HTTP/1.1" 404 -
+[HTTP] 172.17.12.197 - "GET /health HTTP/1.1" 200 -
+[LLM] Calling Google Gemini API for tailored crop advisory...
+[PREDICTION + LLM] Analyzed 1 leaves for farm: 1_acre -> Liriomyza (60%) | LLM: Google Gemini AI
+[HTTP] 172.17.12.197 - "POST /predict HTTP/1.1" 200 -
+[HTTP] 172.17.12.197 - "GET /health HTTP/1.1" 200 -
+[LLM] Calling Google Gemini API for tailored crop advisory...
+[PREDICTION + LLM] Analyzed 1 leaves for farm: 1_acre -> Liriomyza (73%) | LLM: Google Gemini AI
+[HTTP] 172.17.12.197 - "POST /predict HTTP/1.1" 200 -
+[HTTP] 172.17.12.197 - "GET /health HTTP/1.1" 200 -
+[LLM] Calling Google Gemini API for tailored crop advisory...
+[LLM] Gemini API call error: HTTP Error 503: Service Unavailable, using Agronomic Engine
+[LLM] Generating advisory using AgroNex Expert Agronomic Engine...
+[PREDICTION + LLM] Analyzed 1 leaves for farm: 1_acre -> Healthy (79%) | LLM: AgroNex Agronomic Engine
+[HTTP] 172.17.12.197 - "POST /predict HTTP/1.1" 200 -
+[HTTP] 172.17.12.197 - "GET /health HTTP/1.1" 200 -
+[LLM] Calling Google Gemini API for tailored crop advisory...
+[LLM] Gemini API call error: HTTP Error 503: Service Unavailable, using Agronomic Engine
+[LLM] Generating advisory using AgroNex Expert Agronomic Engine...
+[PREDICTION + LLM] Analyzed 1 leaves for farm: 1_acre -> Tuta Absoluta (57%) | LLM: AgroNex Agronomic Engine
+[HTTP] 172.17.12.197 - "POST /predict HTTP/1.1" 200 -
+[HTTP] 172.17.12.197 - "GET /health HTTP/1.1" 200 -
+[LLM] Calling Google Gemini API for tailored crop advisory...
+[LLM] Gemini API call error: HTTP Error 503: Service Unavailable, using Agronomic Engine
+[LLM] Generating advisory using AgroNex Expert Agronomic Engine...
+[PREDICTION + LLM] Analyzed 1 leaves for farm: 1_acre -> Healthy (77%) | LLM: AgroNex Agronomic Engine
+[HTTP] 172.17.12.197 - "POST /predict HTTP/1.1" 200 -
+[HTTP] 172.17.12.197 - "GET /health HTTP/1.1" 200 -
+[LLM] Calling Google Gemini API for tailored crop advisory...
+[LLM] Gemini API call error: HTTP Error 429: Too Many Requests, using Agronomic Engine
+[LLM] Generating advisory using AgroNex Expert Agronomic Engine...
+[PREDICTION + LLM] Analyzed 1 leaves for farm: 1_acre -> Healthy (79%) | LLM: AgroNex Agronomic Engine
+[HTTP] 172.17.12.197 - "POST /predict HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /health HTTP/1.1" 200 -
+[HTTP] 127.0.0.1 - "GET /health HTTP/1.1" 200 -

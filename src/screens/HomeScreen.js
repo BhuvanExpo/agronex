@@ -7,14 +7,15 @@ import {
   ScrollView,
   Animated,
   Easing,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { colors, typography } from '../utils/theme';
 import { UI_STRINGS, SUPPORTED_LANGUAGES } from '../data/languages';
 import { MOCK_DISEASES } from '../data/diseases';
 import Header from '../components/Header';
-import MultiPhotoPickerModal from '../components/MultiPhotoPickerModal';
 import { speakFarmerAdvice, stopSpeech } from '../utils/audio';
 
 export default function HomeScreen({
@@ -26,9 +27,6 @@ export default function HomeScreen({
 }) {
   const strings = UI_STRINGS[currentLanguage] || UI_STRINGS.en;
   const activeLangObj = SUPPORTED_LANGUAGES.find((l) => l.id === currentLanguage);
-
-  const [multiPickerVisible, setMultiPickerVisible] = useState(false);
-  const [pickerMode, setPickerMode] = useState('camera');
 
   // Accessibility TalkBack: stores currently focused item ID
   const [focusedItemId, setFocusedItemId] = useState(null);
@@ -98,14 +96,57 @@ export default function HomeScreen({
     speakFarmerAdvice(announce, currentLanguage);
   };
 
-  const handleOpenPicker = (mode) => {
-    setPickerMode(mode);
-    setMultiPickerVisible(true);
+  const handleTakePhoto = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(strings.cameraPermTitle, strings.cameraPermMessage);
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.85,
+        base64: true,
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        const imageSource = asset.base64 ? `data:image/jpeg;base64,${asset.base64}` : asset.uri;
+        onImagesSelected([imageSource]);
+      }
+    } catch (err) {
+      console.warn('Camera error:', err);
+    }
+  };
+
+  const handlePickGallery = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(strings.galleryPermTitle, strings.galleryPermMessage);
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.85,
+        base64: true,
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        const imageSource = asset.base64 ? `data:image/jpeg;base64,${asset.base64}` : asset.uri;
+        onImagesSelected([imageSource]);
+      }
+    } catch (err) {
+      console.warn('Gallery error:', err);
+    }
   };
 
   const handleSampleSelected = (diseaseId) => {
     const disease = MOCK_DISEASES.find((d) => d.id === diseaseId) || MOCK_DISEASES[0];
-    onImagesSelected(disease.sampleImages, disease.id);
+    onImagesSelected([disease.sampleImages[0]], disease.id);
   };
 
   return (
@@ -120,14 +161,14 @@ export default function HomeScreen({
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Two Central Touch Cards (Icon with Max 3 words under it) */}
         <View style={styles.actionGrid}>
-          {/* Card 1: Take 4 Photos */}
+          {/* Card 1: Take Photo */}
           <TouchableOpacity
             style={[
               styles.actionCard,
               focusedItemId === 'camera' && styles.actionCardFocused,
             ]}
             onPress={() =>
-              handleItemPress('camera', strings.take4Photos, () => handleOpenPicker('camera'))
+              handleItemPress('camera', strings.takePhoto, handleTakePhoto)
             }
             activeOpacity={0.8}
             accessibilityRole="button"
@@ -135,10 +176,10 @@ export default function HomeScreen({
             <View style={[styles.iconCircle, { backgroundColor: '#064E3B' }]}>
               <MaterialCommunityIcons name="camera" size={48} color={colors.white} />
             </View>
-            <Text style={styles.cardTitle}>{strings.take4Photos}</Text>
+            <Text style={styles.cardTitle}>{strings.takePhoto}</Text>
           </TouchableOpacity>
 
-          {/* Card 2: Upload 4 Photos */}
+          {/* Card 2: Upload Photo */}
           <TouchableOpacity
             style={[
               styles.actionCard,
@@ -146,19 +187,19 @@ export default function HomeScreen({
               focusedItemId === 'gallery' && styles.actionCardFocused,
             ]}
             onPress={() =>
-              handleItemPress('gallery', strings.upload4Photos, () => handleOpenPicker('gallery'))
+              handleItemPress('gallery', strings.uploadPhoto, handlePickGallery)
             }
             activeOpacity={0.8}
             accessibilityRole="button"
           >
             <View style={[styles.iconCircle, { backgroundColor: '#0369A1' }]}>
-              <MaterialCommunityIcons name="image-multiple" size={48} color={colors.white} />
+              <MaterialCommunityIcons name="image-plus" size={48} color={colors.white} />
             </View>
-            <Text style={styles.cardTitle}>{strings.upload4Photos}</Text>
+            <Text style={styles.cardTitle}>{strings.uploadPhoto}</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Tomato Disease Focus: Tuta Absoluta & Liriomyza (Max 3 words under icon) */}
+        {/* Tomato Disease Focus: 4 Classes (Max 3 words under icon) */}
         <View style={styles.sampleContainer}>
           <TouchableOpacity
             style={[
@@ -194,6 +235,42 @@ export default function HomeScreen({
               <MaterialCommunityIcons name="butterfly" size={32} color="#D97706" />
             </View>
             <Text style={styles.sampleLabel}>{strings.sampleLiriomyza}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.sampleTile,
+              focusedItemId === 'healthy' && styles.sampleTileFocused,
+            ]}
+            onPress={() =>
+              handleItemPress('healthy', strings.sampleHealthy, () =>
+                handleSampleSelected('healthy')
+              )
+            }
+            activeOpacity={0.8}
+          >
+            <View style={[styles.sampleIconCircle, { backgroundColor: '#ECFDF5' }]}>
+              <MaterialCommunityIcons name="shield-check" size={32} color="#059669" />
+            </View>
+            <Text style={styles.sampleLabel}>{strings.sampleHealthy}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.sampleTile,
+              focusedItemId === 'mixed' && styles.sampleTileFocused,
+            ]}
+            onPress={() =>
+              handleItemPress('mixed', strings.sampleMixed, () =>
+                handleSampleSelected('both_mixed')
+              )
+            }
+            activeOpacity={0.8}
+          >
+            <View style={[styles.sampleIconCircle, { backgroundColor: '#F5F3FF' }]}>
+              <MaterialCommunityIcons name="biohazard" size={32} color="#7C3AED" />
+            </View>
+            <Text style={styles.sampleLabel}>{strings.sampleMixed}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -239,19 +316,6 @@ export default function HomeScreen({
           </Text>
         </TouchableOpacity>
       </View>
-
-      {/* 4-Photo Camera & Gallery Modal */}
-      <MultiPhotoPickerModal
-        visible={multiPickerVisible}
-        mode={pickerMode}
-        currentLanguage={currentLanguage}
-        talkbackEnabled={talkbackEnabled}
-        onClose={() => setMultiPickerVisible(false)}
-        onPhotosConfirmed={(photos) => {
-          setMultiPickerVisible(false);
-          onImagesSelected(photos, null);
-        }}
-      />
     </SafeAreaView>
   );
 }
@@ -312,6 +376,7 @@ const styles = StyleSheet.create({
   },
   sampleContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 12,
     justifyContent: 'space-between',
   },

@@ -67,6 +67,7 @@ export default function MultiPhotoPickerModal({
       const result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
         quality: 0.8,
+        base64: true,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
@@ -114,6 +115,7 @@ export default function MultiPhotoPickerModal({
         allowsMultipleSelection: true,
         selectionLimit: 4,
         quality: 0.8,
+        base64: true,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
@@ -146,6 +148,7 @@ export default function MultiPhotoPickerModal({
         mediaTypes: mediaTypesOption,
         allowsEditing: true,
         quality: 0.8,
+        base64: true,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
