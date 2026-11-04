@@ -11,6 +11,8 @@ export default function Header({
   showLanguageBadge = true,
   talkbackEnabled = false,
   onToggleTalkback,
+  onOpenServerSettings,
+  serverOnline = null,
 }) {
   return (
     <View style={styles.container}>
@@ -36,6 +38,42 @@ export default function Header({
             {title}
           </Text>
         </View>
+
+        {/* Server Connection Settings Button */}
+        {onOpenServerSettings && (
+          <TouchableOpacity
+            style={[
+              styles.serverBtn,
+              serverOnline === true
+                ? styles.serverBtnOnline
+                : serverOnline === false
+                ? styles.serverBtnOffline
+                : styles.serverBtnDefault,
+            ]}
+            onPress={onOpenServerSettings}
+            activeOpacity={0.8}
+            accessibilityLabel="Configure AI Server Connection"
+            accessibilityRole="button"
+          >
+            <MaterialCommunityIcons
+              name={
+                serverOnline === true
+                  ? 'cloud-check'
+                  : serverOnline === false
+                  ? 'cloud-alert'
+                  : 'server-network'
+              }
+              size={18}
+              color={
+                serverOnline === true
+                  ? '#34D399'
+                  : serverOnline === false
+                  ? '#F87171'
+                  : '#A7F3D0'
+              }
+            />
+          </TouchableOpacity>
+        )}
 
         {/* TalkBack Toggle Button */}
         {onToggleTalkback && (
@@ -131,6 +169,29 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: typography.weightBold,
     letterSpacing: 0.3,
+  },
+  serverBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 6,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  serverBtnOnline: {
+    backgroundColor: 'rgba(5, 150, 105, 0.3)',
+    borderColor: '#34D399',
+  },
+  serverBtnOffline: {
+    backgroundColor: 'rgba(220, 38, 38, 0.25)',
+    borderColor: '#F87171',
+  },
+  serverBtnDefault: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   talkbackBtn: {
     flexDirection: 'row',

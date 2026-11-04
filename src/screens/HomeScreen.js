@@ -17,6 +17,8 @@ import { UI_STRINGS, SUPPORTED_LANGUAGES } from '../data/languages';
 import { MOCK_DISEASES } from '../data/diseases';
 import Header from '../components/Header';
 import { speakFarmerAdvice, stopSpeech } from '../utils/audio';
+import { findActiveServerUrl } from '../utils/modelInference';
+import ServerSettingsModal from '../components/ServerSettingsModal';
 
 export default function HomeScreen({
   currentLanguage,
@@ -27,6 +29,30 @@ export default function HomeScreen({
 }) {
   const strings = UI_STRINGS[currentLanguage] || UI_STRINGS.en;
   const activeLangObj = SUPPORTED_LANGUAGES.find((l) => l.id === currentLanguage);
+
+  // Server settings modal & live status
+  const [showServerModal, setShowServerModal] = useState(false);
+  const [serverOnline, setServerOnline] = useState(null);
+  const [connectedUrl, setConnectedUrl] = useState(null);
+
+  const checkServerStatus = async () => {
+    try {
+      const activeUrl = await findActiveServerUrl();
+      if (activeUrl) {
+        setServerOnline(true);
+        setConnectedUrl(activeUrl);
+      } else {
+        setServerOnline(false);
+        setConnectedUrl(null);
+      }
+    } catch {
+      setServerOnline(false);
+    }
+  };
+
+  useEffect(() => {
+    checkServerStatus();
+  }, []);
 
   // Accessibility TalkBack: stores currently focused item ID
   const [focusedItemId, setFocusedItemId] = useState(null);
@@ -156,9 +182,46 @@ export default function HomeScreen({
         activeLanguage={activeLangObj}
         onChangeLanguage={onChangeLanguage}
         showLanguageBadge={true}
+        onOpenServerSettings={() => setShowServerModal(true)}
+        serverOnline={serverOnline}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Server Status Pill (Tap to configure) */}
+        <TouchableOpacity
+          style={[
+            styles.serverStatusPill,
+            serverOnline === true
+              ? styles.serverPillOnline
+              : serverOnline === false
+              ? styles.serverPillOffline
+              : styles.serverPillChecking,
+          ]}
+          onPress={() => setShowServerModal(true)}
+          activeOpacity={0.8}
+        >
+          <MaterialCommunityIcons
+            name={serverOnline ? 'check-decagram' : 'server-network'}
+            size={16}
+            color={serverOnline ? '#059669' : '#DC2626'}
+          />
+          <Text
+            style={[
+              styles.serverStatusText,
+              serverOnline ? styles.serverStatusTextOnline : styles.serverStatusTextOffline,
+            ]}
+          >
+            {serverOnline
+              ? `AI Model Online: ${connectedUrl?.replace('https://', '')?.replace('http://', '')}`
+              : 'AI Server Offline • Tap to Connect'}
+          </Text>
+          <MaterialCommunityIcons
+            name="cog-outline"
+            size={16}
+            color={serverOnline ? '#059669' : '#DC2626'}
+          />
+        </TouchableOpacity>
+
         {/* Two Central Touch Cards (Icon with Max 3 words under it) */}
         <View style={styles.actionGrid}>
           {/* Card 1: Take Photo */}
@@ -316,6 +379,13 @@ export default function HomeScreen({
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* AI Server Settings Modal */}
+      <ServerSettingsModal
+        visible={showServerModal}
+        onClose={() => setShowServerModal(false)}
+        onServerChanged={() => checkServerStatus()}
+      />
     </SafeAreaView>
   );
 }
@@ -328,6 +398,40 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingBottom: 100,
+  },
+  serverStatusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+  },
+  serverPillOnline: {
+    backgroundColor: '#ECFDF5',
+    borderColor: '#A7F3D0',
+  },
+  serverPillOffline: {
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FECACA',
+  },
+  serverPillChecking: {
+    backgroundColor: '#F3F4F6',
+    borderColor: '#E5E7EB',
+  },
+  serverStatusText: {
+    flex: 1,
+    marginHorizontal: 8,
+    fontSize: 12,
+    fontFamily: typography.bold,
+  },
+  serverStatusTextOnline: {
+    color: '#065F46',
+  },
+  serverStatusTextOffline: {
+    color: '#991B1B',
   },
   actionGrid: {
     gap: 16,

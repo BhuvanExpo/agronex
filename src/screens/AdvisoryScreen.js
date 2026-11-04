@@ -16,6 +16,7 @@ import { getLocalizedDisease } from '../data/diseases';
 import Header from '../components/Header';
 import SeverityBadge from '../components/SeverityBadge';
 import { speakFarmerAdvice, stopSpeech } from '../utils/audio';
+import ServerSettingsModal from '../components/ServerSettingsModal';
 
 export default function AdvisoryScreen({
   images = [],
@@ -38,6 +39,7 @@ export default function AdvisoryScreen({
   const [activePhotoIdx, setActivePhotoIdx] = useState(0);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [focusedBtn, setFocusedBtn] = useState(null);
+  const [showServerModal, setShowServerModal] = useState(false);
 
   const photoLabels = [strings.slot1, strings.slot2, strings.slot3, strings.slot4];
 
@@ -145,6 +147,8 @@ export default function AdvisoryScreen({
         showLanguageBadge={true}
         talkbackEnabled={talkbackEnabled}
         onToggleTalkback={onToggleTalkback}
+        onOpenServerSettings={() => setShowServerModal(true)}
+        serverOnline={analysisResult?.isRealModel}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -167,8 +171,16 @@ export default function AdvisoryScreen({
             <View style={{ flex: 1, marginLeft: 10 }}>
               <Text style={styles.offlineBannerTitle}>⚠️ OFFLINE DEMO (Server Not Connected)</Text>
               <Text style={styles.offlineBannerSub}>
-                Could not connect to PyTorch backend. Run "npm run server" on your computer to view real AI output.
+                Could not connect to PyTorch backend. Tap below to connect to your live AI server or cloud tunnel.
               </Text>
+              <TouchableOpacity
+                style={styles.offlineConfigureBtn}
+                onPress={() => setShowServerModal(true)}
+                activeOpacity={0.8}
+              >
+                <MaterialCommunityIcons name="cog" size={16} color="#DC2626" />
+                <Text style={styles.offlineConfigureText}>Configure Server Connection</Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -475,6 +487,12 @@ export default function AdvisoryScreen({
           <Text style={styles.anotherButtonText}>{strings.diagnoseAnother}</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* AI Server Settings Modal */}
+      <ServerSettingsModal
+        visible={showServerModal}
+        onClose={() => setShowServerModal(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -527,6 +545,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#B91C1C',
     marginTop: 2,
+  },
+  offlineConfigureBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1.5,
+    borderColor: '#F87171',
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+  offlineConfigureText: {
+    fontSize: 12,
+    fontFamily: typography.bold,
+    color: '#991B1B',
+    marginLeft: 6,
   },
   heroCard: {
     backgroundColor: colors.white,

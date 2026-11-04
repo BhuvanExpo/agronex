@@ -9,3 +9,4 @@ backend/
 .env
 predict_pest.py
 tomato_classifier.py
+

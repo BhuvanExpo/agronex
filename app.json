@@ -34,7 +34,15 @@
           "cameraPermission": "AgroNex needs camera access to take leaf photos to detect crop diseases and pests."
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
     ],
     "web": {
       "favicon": "./assets/favicon.png"

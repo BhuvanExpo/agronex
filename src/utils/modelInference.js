@@ -14,13 +14,102 @@ import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import Constants from 'expo-constants';
 
+const CONFIG_FILE = `${FileSystem.documentDirectory || ''}agronex_server.json`;
+
+// Default public HTTPS tunnel and local LAN fallback addresses
+export const DEFAULT_TUNNEL_URL = 'https://dull-towns-exist.loca.lt';
+export const DEFAULT_LAN_URL = 'http://172.17.64.102:5001';
+
+let cachedCustomUrl = null;
+
 /**
- * Builds all candidate backend server endpoints for USB, Wi-Fi LAN, and Emulators
+ * Loads custom server URL from storage
  */
-function getCandidateBaseUrls() {
+export async function getStoredServerUrl() {
+  if (cachedCustomUrl) return cachedCustomUrl;
+  try {
+    const info = await FileSystem.getInfoAsync(CONFIG_FILE);
+    if (info.exists) {
+      const content = await FileSystem.readAsStringAsync(CONFIG_FILE);
+      const parsed = JSON.parse(content);
+      if (parsed?.serverUrl) {
+        cachedCustomUrl = parsed.serverUrl.trim().replace(/\/+$/, '');
+        return cachedCustomUrl;
+      }
+    }
+  } catch (err) {
+    console.log('[Storage] Could not read server config:', err.message);
+  }
+  return null;
+}
+
+/**
+ * Saves custom server URL to storage
+ */
+export async function saveStoredServerUrl(url) {
+  const cleanUrl = (url || '').trim().replace(/\/+$/, '');
+  cachedCustomUrl = cleanUrl || null;
+  try {
+    await FileSystem.writeAsStringAsync(
+      CONFIG_FILE,
+      JSON.stringify({ serverUrl: cleanUrl, updatedAt: new Date().toISOString() })
+    );
+    return true;
+  } catch (err) {
+    console.warn('[Storage] Could not write server config:', err.message);
+    return false;
+  }
+}
+
+/**
+ * Test any given server URL
+ */
+export async function testServerConnection(url) {
+  if (!url) return { ok: false, error: 'Empty URL' };
+  const cleanUrl = url.trim().replace(/\/+$/, '');
+  try {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 4000);
+    const res = await fetch(`${cleanUrl}/health`, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        'Bypass-Tunnel-Reminder': 'true',
+      },
+      signal: controller.signal,
+    });
+    clearTimeout(id);
+    if (res.ok) {
+      const json = await res.json();
+      if (json.status === 'online') {
+        return { ok: true, data: json, url: cleanUrl };
+      }
+    }
+    return { ok: false, error: `HTTP ${res.status}` };
+  } catch (err) {
+    return { ok: false, error: err.message || 'Connection failed' };
+  }
+}
+
+/**
+ * Builds all candidate backend server endpoints for USB, Wi-Fi LAN, Tunnels, and Emulators
+ */
+async function getCandidateBaseUrls() {
   const urls = [];
 
-  // 1. Dynamic host from Metro bundler via Expo Constants (works over Wi-Fi on physical phone!)
+  // 0. User saved custom server URL
+  const stored = await getStoredServerUrl();
+  if (stored) {
+    urls.push(stored);
+  }
+
+  // 1. Public HTTPS tunnel (Bypasses Android cleartext restrictions & Wi-Fi isolation)
+  urls.push(DEFAULT_TUNNEL_URL);
+
+  // 2. Direct Wi-Fi LAN IP of the development Mac
+  urls.push(DEFAULT_LAN_URL);
+
+  // 3. Dynamic host from Metro bundler via Expo Constants (works over Wi-Fi on physical phone!)
   const hostUri =
     Constants.expoConfig?.hostUri ||
     Constants.manifest2?.extra?.expoClient?.hostUri ||
@@ -33,30 +122,31 @@ function getCandidateBaseUrls() {
     }
   }
 
-  // 2. Direct Wi-Fi LAN IP of the development Mac
-  urls.push('http://172.17.64.102:5001');
-
-  // 3. USB cable via `adb reverse tcp:5001 tcp:5001`
+  // 4. USB cable via `adb reverse tcp:5001 tcp:5001`
   urls.push('http://localhost:5001');
 
-  // 4. Android Virtual Device (AVD) emulator loopback
+  // 5. Android Virtual Device (AVD) emulator loopback
   urls.push('http://10.0.2.2:5001');
 
-  return Array.from(new Set(urls));
+  return Array.from(new Set(urls.filter(Boolean)));
 }
 
 /**
- * Pings candidate endpoints concurrently to find the active server within 2 seconds
+ * Pings candidate endpoints concurrently to find the active server within 3.5 seconds
  */
-async function findActiveServerUrl() {
-  const candidates = getCandidateBaseUrls();
+export async function findActiveServerUrl() {
+  const candidates = await getCandidateBaseUrls();
 
   const pingPromises = candidates.map(async (baseUrl) => {
     try {
       const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), 2000);
+      const id = setTimeout(() => controller.abort(), 3500);
       const res = await fetch(`${baseUrl}/health`, {
         method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'Bypass-Tunnel-Reminder': 'true',
+        },
         signal: controller.signal,
       });
       clearTimeout(id);
@@ -153,6 +243,7 @@ export async function runTomatoModelInference(images = [], farmerData = null, fa
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          'Bypass-Tunnel-Reminder': 'true',
         },
         body: payloadString,
         signal: controller.signal,
