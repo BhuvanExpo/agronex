@@ -19,10 +19,11 @@ import { generateExpertAdvisory } from './expertAdvisory';
 const CONFIG_FILE = `${FileSystem.documentDirectory || ''}agronex_server.json`;
 
 // Default public HTTPS tunnel and local LAN fallback addresses
-export const DEFAULT_TUNNEL_URL = 'https://dull-towns-exist.loca.lt';
+export const DEFAULT_TUNNEL_URL = 'https://agronex-live.loca.lt';
 export const DEFAULT_LAN_URL = 'http://172.17.64.102:5001';
 
 let cachedCustomUrl = null;
+let cachedActiveServerUrl = null;
 
 /**
  * Loads custom server URL from storage
@@ -134,15 +135,37 @@ async function getCandidateBaseUrls() {
 }
 
 /**
- * Pings candidate endpoints concurrently to find the active server within 3.5 seconds
+ * Pings candidate endpoints concurrently to find the active server within 2 seconds.
+ * Uses cachedActiveServerUrl if already proven online.
  */
 export async function findActiveServerUrl() {
+  if (cachedActiveServerUrl) {
+    try {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), 1200);
+      const res = await fetch(`${cachedActiveServerUrl}/health`, {
+        method: 'GET',
+        headers: { Accept: 'application/json', 'Bypass-Tunnel-Reminder': 'true' },
+        signal: controller.signal,
+      });
+      clearTimeout(id);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.status === 'online') {
+          return cachedActiveServerUrl;
+        }
+      }
+    } catch {
+      cachedActiveServerUrl = null;
+    }
+  }
+
   const candidates = await getCandidateBaseUrls();
 
   const pingPromises = candidates.map(async (baseUrl) => {
     try {
       const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), 3500);
+      const id = setTimeout(() => controller.abort(), 2000);
       const res = await fetch(`${baseUrl}/health`, {
         method: 'GET',
         headers: {
@@ -166,6 +189,7 @@ export async function findActiveServerUrl() {
 
   const results = await Promise.all(pingPromises);
   const active = results.find((url) => url !== null);
+  cachedActiveServerUrl = active || null;
   return active || null;
 }
 
@@ -209,13 +233,14 @@ function mapDiagnosisToDiseaseId(diagnosis) {
 
 /**
  * Runs PyTorch model inference on captured leaf photo and farmer field data.
- * Priority 1: On-Device Offline Neural Network (ResNet-50 INT8 WASM running inside phone)
- * Priority 2: Remote / LAN Python Inference Server (if reachable)
+ * Priority 1 (Online): Fast Wireless / Internet Server Inference over LAN or Public HTTPS Tunnel
+ * Priority 2 (Offline / Fallback): On-Device Neural Network (MobileNetV2 WebGL)
  * Priority 3: On-Device Dynamic Agronomic Engine
  *
  * @param {Array} images - Array of image URIs or objects
  * @param {Object} farmerData - Field data (land, age, variety)
  * @param {string|null} fallbackHint - Optional fallback hint
+ * @param {boolean} forceOffline - True to bypass wireless server and force on-device
  * @returns {Promise<Object>} Diagnosis result
  */
 export async function runTomatoModelInference(images = [], farmerData = null, fallbackHint = null, forceOffline = false) {
@@ -229,11 +254,60 @@ export async function runTomatoModelInference(images = [], farmerData = null, fa
     return getFallbackPrediction(fallbackHint, farmerData, 'No valid leaf image');
   }
 
-  // 1. PRIMARY: On-Device Neural Network Inference (100% Offline)
+  // 1. PRIMARY (ONLINE): Fast Wireless / Internet Server
+  if (!forceOffline) {
+    console.log('[Inference] 🌐 Online Mode: Dispatching to Wireless Server over Internet/LAN...');
+    const activeBaseUrl = await findActiveServerUrl();
+
+    if (activeBaseUrl) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+        const payload = {
+          images: [primaryImageSrc],
+          farmer_data: farmerData || {},
+        };
+
+        const response = await fetch(`${activeBaseUrl}/predict`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'Bypass-Tunnel-Reminder': 'true',
+          },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.status === 'success') {
+            console.log('[Inference] ⚡ WIRELESS SERVER INFERENCE SUCCESSFUL from:', activeBaseUrl);
+            return {
+              ...data,
+              farmer_data: farmerData || data.farmer_data || {},
+              isRealModel: true,
+              isOnDevice: false,
+              serverEndpoint: activeBaseUrl,
+            };
+          }
+        }
+      } catch (err) {
+        console.warn('[Inference] Wireless server error, falling back to on-device:', err.message);
+      }
+    } else {
+      console.log('[Inference] Wireless server not reachable, switching to on-device engine');
+    }
+  }
+
+  // 2. SECONDARY (OFFLINE / BACKUP): On-Device Neural Network Inference
   try {
     console.log('[Inference] Checking On-Device Neural Network (MobileNetV2)...');
     const pureBase64 = primaryImageSrc.replace(/^data:image\/[a-z]+;base64,/, '');
-    const onDeviceResult = await requestOnDeviceInference(pureBase64, 15000);
+    const onDeviceResult = await requestOnDeviceInference(pureBase64, 8000);
 
     if (onDeviceResult && onDeviceResult.diagnosis) {
       console.log(`[Inference] 🟢 ON-DEVICE MODEL INFERENCE COMPLETED (${onDeviceResult.inferLatencyMs}ms)`);
@@ -276,66 +350,9 @@ export async function runTomatoModelInference(images = [], farmerData = null, fa
     console.log('[Inference] On-device runner waiting or skipped:', onDeviceErr.message);
   }
 
-  // If forceOffline requested or explicitly set, return instant on-device diagnosis without remote probe
-  if (forceOffline) {
-    console.log('[Inference] Offline Mode specified: executing on-device identification');
-    const localResult = getFallbackPrediction(fallbackHint, farmerData, 'Offline Mode', primaryImageSrc);
-    return {
-      ...localResult,
-      isRealModel: true,
-      isOnDevice: true,
-      isOffline: true,
-    };
-  }
-
-  // 2. SECONDARY: Probe candidate remote/LAN backend server
-  const activeBaseUrl = await findActiveServerUrl();
-  console.log('[Inference] Active server detected:', activeBaseUrl || 'NONE (Offline Mode)');
-
-  if (activeBaseUrl) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000);
-
-      const payload = {
-        images: [primaryImageSrc],
-        farmer_data: farmerData || {},
-      };
-
-      const response = await fetch(`${activeBaseUrl}/predict`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          'Bypass-Tunnel-Reminder': 'true',
-        },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data && data.status === 'success') {
-          console.log('[Inference] Live server inference succeeded from:', activeBaseUrl);
-          return {
-            ...data,
-            farmer_data: farmerData || data.farmer_data || {},
-            isRealModel: true,
-            isOnDevice: false,
-            serverEndpoint: activeBaseUrl,
-          };
-        }
-      }
-    } catch (err) {
-      console.warn('[Inference] Active server error:', err.message);
-    }
-  }
-
   // 3. TERTIARY: On-Device Dynamic Agronomic Engine
   console.log('[Inference] Executing On-Device Agronomic Engine (100% Offline)');
-  return getFallbackPrediction(fallbackHint, farmerData, 'On-Device Standalone Mode', primaryImageSrc);
+  return getFallbackPrediction(fallbackHint, farmerData, forceOffline ? 'Offline Mode' : 'Standalone Mode', primaryImageSrc);
 }
 
 /**

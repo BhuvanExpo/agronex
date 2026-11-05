@@ -14,3 +14,4 @@ if os.path.exists(onnx_path):
     print(f'Successfully updated {target_js} ({os.path.getsize(target_js)/1024/1024:.2f} MB)')
 else:
     print(f'Error: {onnx_path} does not exist yet.')
+

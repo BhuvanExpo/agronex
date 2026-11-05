@@ -154,7 +154,7 @@ export default function HomeScreen({
         mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 0.85,
+        quality: 0.70,
         base64: true,
       });
       if (!result.canceled && result.assets && result.assets.length > 0) {
@@ -178,7 +178,7 @@ export default function HomeScreen({
         mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 0.85,
+        quality: 0.70,
         base64: true,
       });
       if (!result.canceled && result.assets && result.assets.length > 0) {
