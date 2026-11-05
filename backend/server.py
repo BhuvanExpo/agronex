@@ -15,6 +15,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler, ThreadingHTTPServer
 import email
 from email import policy
 from email.parser import BytesParser
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -66,22 +67,34 @@ if not os.path.exists(MODEL_PATH):
     sys.exit(1)
 
 # Build architecture matching trained model
+checkpoint = torch.load(MODEL_PATH, map_location=DEVICE, weights_only=False)
+num_classes = 4
+if isinstance(checkpoint, dict) and 'classes' in checkpoint:
+    num_classes = len(checkpoint['classes'])
+elif isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+    # Check shape of last linear layer
+    for k, v in checkpoint['model_state_dict'].items():
+        if 'classifier' in k and 'weight' in k or 'fc' in k and 'weight' in k:
+            if v.dim() == 2:
+                num_classes = v.shape[0]
+
+IS_4CLASS = (num_classes == 4)
+
 if 'mobilenet' in MODEL_PATH.lower():
     model = models.mobilenet_v2(weights=None)
     in_features = model.classifier[1].in_features
     model.classifier = nn.Sequential(
-        nn.Dropout(p=0.2),
-        nn.Linear(in_features, 2)  # [Tuta, Liriomyza]
+        nn.Dropout(p=0.3),
+        nn.Linear(in_features, num_classes)
     )
 else:
     model = models.resnet50(weights=None)
     in_features = model.fc.in_features
     model.fc = nn.Sequential(
         nn.Dropout(p=0.3),
-        nn.Linear(in_features, 2)  # 2 Sigmoid Heads: [Tuta, Liriomyza]
+        nn.Linear(in_features, num_classes)
     )
 
-checkpoint = torch.load(MODEL_PATH, map_location=DEVICE, weights_only=False)
 if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
     model.load_state_dict(checkpoint['model_state_dict'])
 else:
@@ -89,7 +102,7 @@ else:
 
 model.to(DEVICE)
 model.eval()
-print(f"[AgroNex] Model loaded successfully! (2-Head Multi-Label Sigmoid Architecture)", flush=True)
+print(f"[AgroNex] Model loaded successfully! (Architecture: {num_classes}-Class {'Softmax' if IS_4CLASS else 'Sigmoid'})", flush=True)
 
 # Preprocessing from predict_pest.py
 transform = transforms.Compose([
@@ -151,28 +164,30 @@ def run_multi_leaf_pest_prediction(pil_images, farmer_data=None):
         inp_tensor = transform(img).unsqueeze(0).to(DEVICE)
         with torch.no_grad():
             logits = model(inp_tensor)
-            probs = torch.sigmoid(logits)[0]
-            p_tuta = probs[0].item()
-            p_liri = probs[1].item()
+            if IS_4CLASS:
+                probs = torch.softmax(logits, dim=1)[0].cpu().numpy()
+                p_healthy_norm = float(probs[0]) * 100
+                p_tuta_norm = float(probs[1]) * 100
+                p_liri_norm = float(probs[2]) * 100
+                p_mixed_norm = float(probs[3]) * 100
+                p_tuta = float(probs[1] + (probs[3] if np.argmax(probs) == 3 else 0))
+                p_liri = float(probs[2] + (probs[3] if np.argmax(probs) == 3 else 0))
+            else:
+                probs = torch.sigmoid(logits)[0]
+                p_tuta = probs[0].item()
+                p_liri = probs[1].item()
+                p_healthy = (1.0 - p_tuta) * (1.0 - p_liri)
+                p_tuta_only = p_tuta * (1.0 - p_liri)
+                p_liri_only = (1.0 - p_tuta) * p_liri
+                p_mixed = p_tuta * p_liri
+                total_p = p_healthy + p_tuta_only + p_liri_only + p_mixed
+                p_healthy_norm = (p_healthy / total_p) * 100
+                p_tuta_norm = (p_tuta_only / total_p) * 100
+                p_liri_norm = (p_liri_only / total_p) * 100
+                p_mixed_norm = (p_mixed / total_p) * 100
 
         tuta_scores.append(p_tuta)
         liri_scores.append(p_liri)
-
-        # Joint 4-State Probability Distribution (from predict_pest.py)
-        # 1. Healthy       = (1 - p_tuta) * (1 - p_liri)
-        # 2. Tuta Absoluta = p_tuta * (1 - p_liri)
-        # 3. Liriomyza     = (1 - p_tuta) * p_liri
-        # 4. Mixed         = p_tuta * p_liri
-        p_healthy = (1.0 - p_tuta) * (1.0 - p_liri)
-        p_tuta_only = p_tuta * (1.0 - p_liri)
-        p_liri_only = (1.0 - p_tuta) * p_liri
-        p_mixed = p_tuta * p_liri
-
-        total_p = p_healthy + p_tuta_only + p_liri_only + p_mixed
-        p_healthy_norm = (p_healthy / total_p) * 100
-        p_tuta_norm = (p_tuta_only / total_p) * 100
-        p_liri_norm = (p_liri_only / total_p) * 100
-        p_mixed_norm = (p_mixed / total_p) * 100
 
         leaf_states = {
             'Healthy': round(p_healthy_norm, 2),
@@ -182,14 +197,9 @@ def run_multi_leaf_pest_prediction(pil_images, farmer_data=None):
         }
 
         # Leaf diagnosis logic
-        if p_tuta >= 0.30 and p_liri >= 0.30:
-            leaf_diag = 'Both (Mixed)'
-            leaf_conf = p_mixed_norm
-            leaf_id = 'both_mixed'
-        else:
-            leaf_diag = max(leaf_states, key=leaf_states.get)
-            leaf_conf = leaf_states[leaf_diag]
-            leaf_id = DISEASE_MAP[leaf_diag]
+        leaf_diag = max(leaf_states, key=leaf_states.get)
+        leaf_conf = leaf_states[leaf_diag]
+        leaf_id = DISEASE_MAP[leaf_diag]
 
         leaf_predictions.append({
             'leaf_index': idx + 1,
@@ -337,7 +347,7 @@ class AgroNexRequestHandler(BaseHTTPRequestHandler):
                 'app': 'AgroNex Production Tomato Pest Server',
                 'device': str(DEVICE),
                 'model_file': os.path.basename(MODEL_PATH),
-                'architecture': 'ResNet-50 2-Head Multi-Label (predict_pest.py)',
+                'architecture': 'MobileNetV2 4-Class Softmax Neural Engine',
                 'states': ['Healthy', 'Tuta Absoluta', 'Liriomyza', 'Both (Mixed)'],
                 'llm_enabled': bool(os.environ.get('GEMINI_API_KEY') or os.environ.get('OPENAI_API_KEY')),
             }

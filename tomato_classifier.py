@@ -5,6 +5,8 @@ import torch
 import torch.nn as nn
 from torchvision import models, transforms
 
+CLASS_NAMES = ["Healthy", "Tuta Absoluta", "Liriomyza", "Both (Mixed)"]
+
 
 class TomatoPestClassifier:
 
@@ -17,33 +19,31 @@ class TomatoPestClassifier:
     else:
       self.device = torch.device("cpu")
 
-    if not os.path.exists(model_path) and os.path.exists("best_real_pest_model.pth"):
-      model_path = "best_real_pest_model.pth"
+    if not os.path.exists(model_path) and os.path.exists("model train/best_mobilenet_v2.pth"):
+      model_path = "model train/best_mobilenet_v2.pth"
 
-    # Reconstruct exact architecture
-    if "mobilenet" in model_path.lower():
-      self.model = models.mobilenet_v2(weights=None)
-      in_features = self.model.classifier[1].in_features
-      self.model.classifier = nn.Sequential(
-          nn.Dropout(p=0.2), nn.Linear(in_features, 2)
-      )
-    else:
-      self.model = models.resnet50(weights=None)
-      in_features = self.model.fc.in_features
-      self.model.fc = nn.Sequential(
-          nn.Dropout(p=0.3), nn.Linear(in_features, 2)  # [Tuta, Liriomyza]
-      )
-
-    # Load trained weights
+    # Pre-load checkpoint to detect classes
     checkpoint = torch.load(
         model_path, map_location=self.device, weights_only=False
     )
+    classes = checkpoint.get("classes", CLASS_NAMES) if isinstance(checkpoint, dict) else CLASS_NAMES
+    num_classes = len(classes)
+
+    # Reconstruct MobileNetV2 architecture
+    self.model = models.mobilenet_v2(weights=None)
+    in_features = self.model.classifier[1].in_features
+    self.model.classifier = nn.Sequential(
+        nn.Dropout(p=0.3), nn.Linear(in_features, num_classes)
+    )
+
     if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
       self.model.load_state_dict(checkpoint["model_state_dict"])
     else:
       self.model.load_state_dict(checkpoint)
+
     self.model.to(self.device)
     self.model.eval()
+    self.classes = classes
 
     # Preprocessing pipeline
     self.transform = transforms.Compose([
@@ -64,38 +64,30 @@ class TomatoPestClassifier:
 
     with torch.no_grad():
       logits = self.model(tensor)
-      probs = torch.sigmoid(logits)[0]
-      p_tuta = probs[0].item()
-      p_liri = probs[1].item()
+      probs = torch.softmax(logits, dim=1)[0].cpu().numpy()
 
-    # Calculate 4-state joint distribution
-    p_healthy = (1.0 - p_tuta) * (1.0 - p_liri)
-    p_tuta_only = p_tuta * (1.0 - p_liri)
-    p_liri_only = (1.0 - p_tuta) * p_liri
-    p_mixed = p_tuta * p_liri
+    p_healthy = float(probs[0]) * 100
+    p_tuta = float(probs[1]) * 100
+    p_liri = float(probs[2]) * 100
+    p_mixed = float(probs[3]) * 100
 
-    total = p_healthy + p_tuta_only + p_liri_only + p_mixed
+    pred_idx = int(np.argmax(probs))
+    final_label = self.classes[pred_idx]
+    confidence = float(probs[pred_idx]) * 100
+
     probs_dict = {
-        "HEALTHY": round((p_healthy / total) * 100, 2),
-        "TUTA ABSOLUTA": round((p_tuta_only / total) * 100, 2),
-        "LIRIOMYZA": round((p_liri_only / total) * 100, 2),
-        "MIXED INFESTATION": round((p_mixed / total) * 100, 2),
+        "HEALTHY": round(p_healthy, 2),
+        "TUTA ABSOLUTA": round(p_tuta, 2),
+        "LIRIOMYZA": round(p_liri, 2),
+        "BOTH (MIXED)": round(p_mixed, 2),
     }
 
-    # Final Diagnosis Decision
-    if p_tuta >= 0.30 and p_liri >= 0.30:
-      final_label = "MIXED INFESTATION (Both Tuta & Liriomyza)"
-      confidence = probs_dict["MIXED INFESTATION"]
-    else:
-      final_label = max(probs_dict, key=probs_dict.get)
-      confidence = probs_dict[final_label]
-
     return {
-        "diagnosis": final_label,
-        "confidence": confidence,
+        "diagnosis": final_label.upper(),
+        "confidence": round(confidence, 2),
         "symptoms": {
-            "tuta_blotch_score": round(p_tuta * 100, 2),
-            "liriomyza_serpentine_score": round(p_liri * 100, 2),
+            "tuta_blotch_score": round(p_tuta + (p_mixed if pred_idx == 3 else 0), 2),
+            "liriomyza_serpentine_score": round(p_liri + (p_mixed if pred_idx == 3 else 0), 2),
         },
         "all_probabilities": probs_dict,
     }
@@ -106,7 +98,7 @@ if __name__ == "__main__":
   import sys
   test_image = sys.argv[1] if len(sys.argv) > 1 else "assets/samples/tuta.jpg"
   if os.path.exists(test_image):
-    classifier = TomatoPestClassifier("best_real_pest_model.pth")
+    classifier = TomatoPestClassifier("best_mobilenet_v2.pth")
     result = classifier.predict(test_image)
     print(f"\n--- Tomato Pest Diagnosis ({os.path.basename(test_image)}) ---")
     print(f"Diagnosis : {result['diagnosis']} ({result['confidence']}%)")

@@ -200,7 +200,7 @@ export default function AdvisoryScreen({
                 🟢 Real Model Detection ({analysisResult.confidence_pct || disease.confidence})
               </Text>
               <Text style={styles.liveBannerSub}>
-                Pest Model: ResNet-50 • Endpoint: {analysisResult.serverEndpoint || 'Active Server'}
+                Pest Model: MobileNetV2 • Endpoint: {analysisResult.serverEndpoint || 'Active Server'}
               </Text>
             </View>
           </View>
@@ -338,7 +338,7 @@ export default function AdvisoryScreen({
           <View style={styles.symptomCard}>
             <View style={styles.symptomHeader}>
               <MaterialCommunityIcons name="microscope" size={18} color="#0F766E" />
-              <Text style={styles.symptomHeaderTitle}>Symptom Detection (2-Head Model)</Text>
+              <Text style={styles.symptomHeaderTitle}>Symptom Detection (MobileNetV2 Neural Engine)</Text>
             </View>
             <View style={styles.symptomBody}>
               <View style={styles.symptomRow}>

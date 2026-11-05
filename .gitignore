@@ -45,4 +45,16 @@ yarn-error.*
 __pycache__/
 *.pyc
 .env
+.venv/
+model train/.venv/
+model train/dataset_real_4class/
+model train/dataset_multilabel/
+model train/dataset_multiclass/
+model train/dataset_multiclass.zip
+model train/ChipToCrop_Training/
+model train/raw_tuta/
+model train/raw_liriomyza/
+
+
+
 
