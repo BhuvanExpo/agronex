@@ -317,7 +317,7 @@ def run_multi_leaf_pest_prediction(pil_images, farmer_data=None):
         'infestation_spread': f"{infected_count} of {num_leaves} leaves ({round((infected_count / num_leaves) * 100)}%)",
         'leaf_predictions': leaf_predictions,
         'farmer_data': farmer_data or {},
-        'model_name': 'ResNet-50 (best_real_pest_model.pth)',
+        'model_name': f"{MODEL_ARCHITECTURE} ({MODEL_PATH})",
         'device': str(DEVICE),
     }
 
