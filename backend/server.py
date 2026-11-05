@@ -197,10 +197,30 @@ def run_multi_leaf_pest_prediction(pil_images, farmer_data=None):
             'Both (Mixed)': round(p_mixed_norm, 2),
         }
 
-        # Leaf diagnosis logic
-        leaf_diag = max(leaf_states, key=leaf_states.get)
-        leaf_conf = leaf_states[leaf_diag]
+        # Calibrated Agronomic Diagnosis Logic
+        h_prob = leaf_states['Healthy']
+        t_prob = leaf_states['Tuta Absoluta']
+        l_prob = leaf_states['Liriomyza']
+        m_prob = leaf_states['Both (Mixed)']
+
+        if m_prob >= 25.0 or (t_prob >= 25.0 and l_prob >= 25.0):
+            leaf_diag = 'Both (Mixed)'
+            leaf_conf = max(m_prob, (t_prob + l_prob) / 2)
+        elif t_prob >= 25.0 and t_prob > l_prob:
+            leaf_diag = 'Tuta Absoluta'
+            leaf_conf = max(t_prob, (t_prob / (t_prob + l_prob + m_prob + 1e-5)) * 100)
+        elif l_prob >= 25.0 and l_prob > t_prob:
+            leaf_diag = 'Liriomyza'
+            leaf_conf = max(l_prob, (l_prob / (t_prob + l_prob + m_prob + 1e-5)) * 100)
+        elif h_prob >= 50.0:
+            leaf_diag = 'Healthy'
+            leaf_conf = h_prob
+        else:
+            leaf_diag = max(leaf_states, key=leaf_states.get)
+            leaf_conf = leaf_states[leaf_diag]
+
         leaf_id = DISEASE_MAP[leaf_diag]
+        print(f"[PROBABILITIES Leaf {idx+1}] {leaf_states} -> {leaf_diag} ({round(leaf_conf, 1)}%)", flush=True)
 
         leaf_predictions.append({
             'leaf_index': idx + 1,
@@ -441,6 +461,13 @@ class AgroNexRequestHandler(BaseHTTPRequestHandler):
                 return
 
             # Run PyTorch ResNet-50 inference + LLM Advisory Generation
+            if pil_images and len(pil_images) > 0:
+                try:
+                    pil_images[0].save(os.path.join(PROJECT_DIR, 'backend', 'last_uploaded.jpg'))
+                    print(f"[DEBUG IMAGE] Saved last uploaded image ({pil_images[0].size}) to backend/last_uploaded.jpg", flush=True)
+                except Exception as save_err:
+                    print(f"[DEBUG IMAGE] Error saving image: {save_err}", flush=True)
+
             result = run_multi_leaf_pest_prediction(pil_images, farmer_data)
             print(
                 f"[PREDICTION + LLM] Analyzed {result['leaves_analyzed']} leaves for farm: {farmer_data.get('land', '1_acre')} "

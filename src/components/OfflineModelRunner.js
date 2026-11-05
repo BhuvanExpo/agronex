@@ -232,8 +232,23 @@ ${ORT_MIN_JS}
 
       const maxIdx = probs.indexOf(Math.max(...probs));
       const CLASS_NAMES = ['HEALTHY', 'TUTA ABSOLUTA', 'LIRIOMYZA', 'MIXED INFESTATION (Both Tuta & Liriomyza)'];
-      const diagnosis = CLASS_NAMES[maxIdx];
-      const confidence = probs[maxIdx];
+      let diagnosis = CLASS_NAMES[maxIdx];
+      let confidence = probs[maxIdx];
+
+      // Calibrated Agronomic Diagnosis
+      if (pMixedPct >= 25.0 || (pTutaPct >= 25.0 && pLiriPct >= 25.0)) {
+        diagnosis = 'MIXED INFESTATION (Both Tuta & Liriomyza)';
+        confidence = Math.max(pMixedPct, (pTutaPct + pLiriPct) / 2);
+      } else if (pTutaPct >= 25.0 && pTutaPct > pLiriPct) {
+        diagnosis = 'TUTA ABSOLUTA';
+        confidence = Math.max(pTutaPct, (pTutaPct / (pTutaPct + pLiriPct + pMixedPct + 1e-5)) * 100);
+      } else if (pLiriPct >= 25.0 && pLiriPct > pTutaPct) {
+        diagnosis = 'LIRIOMYZA';
+        confidence = Math.max(pLiriPct, (pLiriPct / (pTutaPct + pLiriPct + pMixedPct + 1e-5)) * 100);
+      } else if (pHealthyPct >= 50.0) {
+        diagnosis = 'HEALTHY';
+        confidence = pHealthyPct;
+      }
 
       const states = {
         'MIXED INFESTATION (Both Tuta & Liriomyza)': pMixedPct,

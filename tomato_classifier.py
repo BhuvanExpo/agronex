@@ -72,9 +72,6 @@ class TomatoPestClassifier:
     p_mixed = float(probs[3]) * 100
 
     pred_idx = int(np.argmax(probs))
-    final_label = self.classes[pred_idx]
-    confidence = float(probs[pred_idx]) * 100
-
     probs_dict = {
         "HEALTHY": round(p_healthy, 2),
         "TUTA ABSOLUTA": round(p_tuta, 2),
@@ -82,12 +79,29 @@ class TomatoPestClassifier:
         "BOTH (MIXED)": round(p_mixed, 2),
     }
 
+    # Calibrated Agronomic Diagnosis
+    if p_mixed >= 25.0 or (p_tuta >= 25.0 and p_liri >= 25.0):
+      final_label = "Both (Mixed)"
+      confidence = max(p_mixed, (p_tuta + p_liri) / 2)
+    elif p_tuta >= 25.0 and p_tuta > p_liri:
+      final_label = "Tuta Absoluta"
+      confidence = max(p_tuta, (p_tuta / (p_tuta + p_liri + p_mixed + 1e-5)) * 100)
+    elif p_liri >= 25.0 and p_liri > p_tuta:
+      final_label = "Liriomyza"
+      confidence = max(p_liri, (p_liri / (p_tuta + p_liri + p_mixed + 1e-5)) * 100)
+    elif p_healthy >= 50.0:
+      final_label = "Healthy"
+      confidence = p_healthy
+    else:
+      final_label = self.classes[pred_idx]
+      confidence = float(probs[pred_idx]) * 100
+
     return {
         "diagnosis": final_label.upper(),
         "confidence": round(confidence, 2),
         "symptoms": {
-            "tuta_blotch_score": round(p_tuta + (p_mixed if pred_idx == 3 else 0), 2),
-            "liriomyza_serpentine_score": round(p_liri + (p_mixed if pred_idx == 3 else 0), 2),
+            "tuta_blotch_score": round(p_tuta, 2),
+            "liriomyza_serpentine_score": round(p_liri, 2),
         },
         "all_probabilities": probs_dict,
     }
