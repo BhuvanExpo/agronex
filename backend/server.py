@@ -79,6 +79,7 @@ elif isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
                 num_classes = v.shape[0]
 
 IS_4CLASS = (num_classes == 4)
+MODEL_ARCHITECTURE = f"{'MobileNetV2' if 'mobilenet' in MODEL_PATH.lower() else 'ResNet-50'} {num_classes}-Class {'Softmax' if IS_4CLASS else 'Sigmoid'}"
 
 if 'mobilenet' in MODEL_PATH.lower():
     model = models.mobilenet_v2(weights=None)
