@@ -26,6 +26,8 @@ export default function HomeScreen({
   onImagesSelected,
   talkbackEnabled,
   onToggleTalkback,
+  isOfflineMode,
+  onToggleOfflineMode,
 }) {
   const strings = UI_STRINGS[currentLanguage] || UI_STRINGS.en;
   const activeLangObj = SUPPORTED_LANGUAGES.find((l) => l.id === currentLanguage);
@@ -34,25 +36,44 @@ export default function HomeScreen({
   const [showServerModal, setShowServerModal] = useState(false);
   const [serverOnline, setServerOnline] = useState(null);
   const [connectedUrl, setConnectedUrl] = useState(null);
+  const [isCheckingServer, setIsCheckingServer] = useState(false);
 
   const checkServerStatus = async () => {
+    setIsCheckingServer(true);
     try {
       const activeUrl = await findActiveServerUrl();
       if (activeUrl) {
         setServerOnline(true);
         setConnectedUrl(activeUrl);
+        if (onToggleOfflineMode && isOfflineMode === null) {
+          onToggleOfflineMode(false);
+        }
       } else {
         setServerOnline(false);
         setConnectedUrl(null);
+        if (onToggleOfflineMode && isOfflineMode === null) {
+          onToggleOfflineMode(true);
+        }
       }
     } catch {
       setServerOnline(false);
+      setConnectedUrl(null);
+      if (onToggleOfflineMode && isOfflineMode === null) {
+        onToggleOfflineMode(true);
+      }
+    } finally {
+      setIsCheckingServer(false);
     }
   };
 
   useEffect(() => {
     checkServerStatus();
   }, []);
+
+  // Determine effective offline state: if user manually toggled, respect user; otherwise respect server detection
+  const isOffline = isOfflineMode !== null && isOfflineMode !== undefined
+    ? isOfflineMode
+    : (serverOnline === false || serverOnline === null);
 
   // Accessibility TalkBack: stores currently focused item ID
   const [focusedItemId, setFocusedItemId] = useState(null);
@@ -176,51 +197,77 @@ export default function HomeScreen({
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, isOffline && styles.safeAreaOffline]}>
       <Header
-        title={strings.appTitle}
+        title={isOffline ? `${strings.appTitle} (OFFLINE)` : strings.appTitle}
         activeLanguage={activeLangObj}
         onChangeLanguage={onChangeLanguage}
         showLanguageBadge={true}
         onOpenServerSettings={() => setShowServerModal(true)}
         serverOnline={serverOnline}
+        isOffline={isOffline}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Server Status Pill (Tap to configure) */}
-        <TouchableOpacity
-          style={[
-            styles.serverStatusPill,
-            serverOnline === true
-              ? styles.serverPillOnline
-              : serverOnline === false
-              ? styles.serverPillOffline
-              : styles.serverPillChecking,
-          ]}
-          onPress={() => setShowServerModal(true)}
-          activeOpacity={0.8}
-        >
-          <MaterialCommunityIcons
-            name={serverOnline ? 'check-decagram' : 'server-network'}
-            size={16}
-            color={serverOnline ? '#059669' : '#DC2626'}
-          />
-          <Text
-            style={[
-              styles.serverStatusText,
-              serverOnline ? styles.serverStatusTextOnline : styles.serverStatusTextOffline,
-            ]}
-          >
-            {serverOnline
-              ? `AI Model Online: ${connectedUrl?.replace('https://', '')?.replace('http://', '')}`
-              : 'AI Server Offline • Tap to Connect'}
-          </Text>
-          <MaterialCommunityIcons
-            name="cog-outline"
-            size={16}
-            color={serverOnline ? '#059669' : '#DC2626'}
-          />
-        </TouchableOpacity>
+        {/* Visual Mode Detection Card (Red Theme for Offline, Green for Online) */}
+        {isOffline ? (
+          <View style={styles.offlineDetectionCard}>
+            <View style={styles.detectionCardTop}>
+              <MaterialCommunityIcons name="alert-octagon" size={26} color="#DC2626" />
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <Text style={styles.offlineDetectionTitle}>🔴 OFFLINE MODE DETECTED</Text>
+                <Text style={styles.offlineDetectionSub}>
+                  Screen switched to RED theme. Running on-device neural network (Disease ID Only).
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.detectionActionsRow}>
+              <TouchableOpacity
+                style={styles.retryConnectionBtn}
+                onPress={checkServerStatus}
+                activeOpacity={0.8}
+              >
+                <MaterialCommunityIcons name="refresh" size={15} color="#991B1B" />
+                <Text style={styles.retryConnectionText}>
+                  {isCheckingServer ? 'Checking...' : 'Check Server'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.switchModeBtn}
+                onPress={() => onToggleOfflineMode && onToggleOfflineMode(false)}
+                activeOpacity={0.8}
+              >
+                <MaterialCommunityIcons name="cloud-check" size={15} color="#059669" />
+                <Text style={styles.switchModeText}>Force Online</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.onlineDetectionCard}>
+            <View style={styles.detectionCardTop}>
+              <MaterialCommunityIcons name="check-decagram" size={24} color="#059669" />
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <Text style={styles.onlineDetectionTitle}>🟢 ONLINE MODE DETECTED</Text>
+                <Text style={styles.onlineDetectionSub}>
+                  Connected to AI Server ({connectedUrl?.replace('https://', '')?.replace('http://', '') || 'Active'}). Full LLM advisory enabled.
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.detectionActionsRow}>
+              <TouchableOpacity
+                style={styles.switchModeBtnRed}
+                onPress={() => onToggleOfflineMode && onToggleOfflineMode(true)}
+                activeOpacity={0.8}
+              >
+                <MaterialCommunityIcons name="cellphone-off" size={15} color="#DC2626" />
+                <Text style={styles.switchModeTextRed}>Switch to Offline (Red Theme)</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
         {/* Two Central Touch Cards (Icon with Max 3 words under it) */}
         <View style={styles.actionGrid}>
@@ -228,7 +275,8 @@ export default function HomeScreen({
           <TouchableOpacity
             style={[
               styles.actionCard,
-              focusedItemId === 'camera' && styles.actionCardFocused,
+              isOffline && styles.actionCardOffline,
+              focusedItemId === 'camera' && (isOffline ? styles.actionCardFocusedRed : styles.actionCardFocused),
             ]}
             onPress={() =>
               handleItemPress('camera', strings.takePhoto, handleTakePhoto)
@@ -236,10 +284,26 @@ export default function HomeScreen({
             activeOpacity={0.8}
             accessibilityRole="button"
           >
-            <View style={[styles.iconCircle, { backgroundColor: '#064E3B' }]}>
+            <View
+              style={[
+                styles.iconCircle,
+                { backgroundColor: isOffline ? '#DC2626' : '#064E3B' },
+              ]}
+            >
               <MaterialCommunityIcons name="camera" size={48} color={colors.white} />
             </View>
-            <Text style={styles.cardTitle}>{strings.takePhoto}</Text>
+            <Text style={[styles.cardTitle, isOffline && styles.cardTitleOffline]}>
+              {strings.takePhoto}
+            </Text>
+            {isOffline ? (
+              <View style={styles.offlineNoticeBadge}>
+                <Text style={styles.offlineNoticeBadgeText}>🔴 Disease ID Only</Text>
+              </View>
+            ) : (
+              <View style={styles.onlineNoticeBadge}>
+                <Text style={styles.onlineNoticeBadgeText}>🟢 Full Advisory</Text>
+              </View>
+            )}
           </TouchableOpacity>
 
           {/* Card 2: Upload Photo */}
@@ -247,7 +311,8 @@ export default function HomeScreen({
             style={[
               styles.actionCard,
               styles.galleryCard,
-              focusedItemId === 'gallery' && styles.actionCardFocused,
+              isOffline && styles.galleryCardOffline,
+              focusedItemId === 'gallery' && (isOffline ? styles.actionCardFocusedRed : styles.actionCardFocused),
             ]}
             onPress={() =>
               handleItemPress('gallery', strings.uploadPhoto, handlePickGallery)
@@ -255,11 +320,34 @@ export default function HomeScreen({
             activeOpacity={0.8}
             accessibilityRole="button"
           >
-            <View style={[styles.iconCircle, { backgroundColor: '#0369A1' }]}>
+            <View
+              style={[
+                styles.iconCircle,
+                { backgroundColor: isOffline ? '#B91C1C' : '#0369A1' },
+              ]}
+            >
               <MaterialCommunityIcons name="image-plus" size={48} color={colors.white} />
             </View>
-            <Text style={styles.cardTitle}>{strings.uploadPhoto}</Text>
+            <Text style={[styles.cardTitle, isOffline && styles.cardTitleOffline]}>
+              {strings.uploadPhoto}
+            </Text>
+            {isOffline ? (
+              <View style={styles.offlineNoticeBadge}>
+                <Text style={styles.offlineNoticeBadgeText}>🔴 Disease ID Only</Text>
+              </View>
+            ) : (
+              <View style={styles.onlineNoticeBadge}>
+                <Text style={styles.onlineNoticeBadgeText}>🟢 Full Advisory</Text>
+              </View>
+            )}
           </TouchableOpacity>
+        </View>
+
+        {/* Section Header */}
+        <View style={styles.samplesHeaderRow}>
+          <Text style={[styles.samplesSectionTitle, isOffline && { color: '#991B1B' }]}>
+            {isOffline ? '🔴 Quick Disease Test (Offline ID)' : 'Quick Crop Tests'}
+          </Text>
         </View>
 
         {/* Tomato Disease Focus: 4 Classes (Max 3 words under icon) */}
@@ -395,9 +483,175 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.slate50,
   },
+  safeAreaOffline: {
+    backgroundColor: '#FEF2F2',
+  },
   scrollContent: {
     padding: 16,
     paddingBottom: 100,
+  },
+  offlineDetectionCard: {
+    backgroundColor: '#FFF5F5',
+    borderColor: '#EF4444',
+    borderWidth: 2,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 16,
+    elevation: 3,
+    shadowColor: '#DC2626',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  detectionCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  offlineDetectionTitle: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#991B1B',
+    letterSpacing: 0.4,
+  },
+  offlineDetectionSub: {
+    fontSize: 12,
+    color: '#7F1D1D',
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  detectionActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 10,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#FECACA',
+  },
+  retryConnectionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+  },
+  retryConnectionText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#991B1B',
+    marginLeft: 6,
+  },
+  switchModeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  switchModeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#065F46',
+    marginLeft: 6,
+  },
+  onlineDetectionCard: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#10B981',
+    borderWidth: 2,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 16,
+    elevation: 3,
+  },
+  onlineDetectionTitle: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#065F46',
+    letterSpacing: 0.4,
+  },
+  onlineDetectionSub: {
+    fontSize: 12,
+    color: '#047857',
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  switchModeBtnRed: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  switchModeTextRed: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#991B1B',
+    marginLeft: 6,
+  },
+  actionCardOffline: {
+    borderColor: '#DC2626',
+    backgroundColor: '#FFF5F5',
+    shadowColor: '#DC2626',
+  },
+  galleryCardOffline: {
+    borderColor: '#B91C1C',
+    backgroundColor: '#FFF5F5',
+  },
+  actionCardFocusedRed: {
+    borderColor: '#991B1B',
+    borderWidth: 4,
+    backgroundColor: '#FEE2E2',
+    elevation: 8,
+  },
+  cardTitleOffline: {
+    color: '#7F1D1D',
+  },
+  offlineNoticeBadge: {
+    backgroundColor: '#FEE2E2',
+    borderColor: '#F87171',
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    marginTop: 6,
+  },
+  offlineNoticeBadgeText: {
+    color: '#991B1B',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  onlineNoticeBadge: {
+    backgroundColor: '#ECFDF5',
+    borderColor: '#A7F3D0',
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    marginTop: 6,
+  },
+  onlineNoticeBadgeText: {
+    color: '#065F46',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  samplesHeaderRow: {
+    marginBottom: 10,
+    marginTop: 4,
+  },
+  samplesSectionTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: colors.slate700,
+    letterSpacing: 0.3,
   },
   serverStatusPill: {
     flexDirection: 'row',
@@ -412,6 +666,10 @@ const styles = StyleSheet.create({
   serverPillOnline: {
     backgroundColor: '#ECFDF5',
     borderColor: '#A7F3D0',
+  },
+  serverPillOfflineReady: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#86EFAC',
   },
   serverPillOffline: {
     backgroundColor: '#FEF2F2',
@@ -429,6 +687,10 @@ const styles = StyleSheet.create({
   },
   serverStatusTextOnline: {
     color: '#065F46',
+  },
+  serverStatusTextOnDevice: {
+    color: '#047857',
+    fontWeight: '700',
   },
   serverStatusTextOffline: {
     color: '#991B1B',

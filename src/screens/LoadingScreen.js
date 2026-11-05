@@ -23,6 +23,7 @@ export default function LoadingScreen({
   currentLanguage = 'en',
   farmerData = null,
   fallbackHint = null,
+  isOfflineMode = false,
   onAnalysisComplete,
 }) {
   const strings = UI_STRINGS[currentLanguage] || UI_STRINGS.en;
@@ -54,7 +55,7 @@ export default function LoadingScreen({
 
     // Call PyTorch ResNet-50 inference asynchronously with uploaded images & farmer data (including language)
     const enrichedFarmerData = { ...(farmerData || {}), language: currentLanguage };
-    runTomatoModelInference(images, enrichedFarmerData, fallbackHint)
+    runTomatoModelInference(images, enrichedFarmerData, fallbackHint, isOfflineMode)
       .then((inferenceResult) => {
         if (!isMounted) return;
         const elapsed = Date.now() - startTime;

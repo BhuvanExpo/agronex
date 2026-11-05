@@ -8,7 +8,7 @@ from torchvision import models, transforms
 
 class TomatoPestClassifier:
 
-  def __init__(self, model_path="best_real_pest_model.pth"):
+  def __init__(self, model_path="best_mobilenet_v2.pth"):
     # Automatically select MPS (Mac), CUDA (NVIDIA), or CPU
     if torch.backends.mps.is_available():
       self.device = torch.device("mps")
@@ -17,18 +17,31 @@ class TomatoPestClassifier:
     else:
       self.device = torch.device("cpu")
 
+    if not os.path.exists(model_path) and os.path.exists("best_real_pest_model.pth"):
+      model_path = "best_real_pest_model.pth"
+
     # Reconstruct exact architecture
-    self.model = models.resnet50(weights=None)
-    in_features = self.model.fc.in_features
-    self.model.fc = nn.Sequential(
-        nn.Dropout(p=0.3), nn.Linear(in_features, 2)  # [Tuta, Liriomyza]
-    )
+    if "mobilenet" in model_path.lower():
+      self.model = models.mobilenet_v2(weights=None)
+      in_features = self.model.classifier[1].in_features
+      self.model.classifier = nn.Sequential(
+          nn.Dropout(p=0.2), nn.Linear(in_features, 2)
+      )
+    else:
+      self.model = models.resnet50(weights=None)
+      in_features = self.model.fc.in_features
+      self.model.fc = nn.Sequential(
+          nn.Dropout(p=0.3), nn.Linear(in_features, 2)  # [Tuta, Liriomyza]
+      )
 
     # Load trained weights
     checkpoint = torch.load(
         model_path, map_location=self.device, weights_only=False
     )
-    self.model.load_state_dict(checkpoint["model_state_dict"])
+    if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+      self.model.load_state_dict(checkpoint["model_state_dict"])
+    else:
+      self.model.load_state_dict(checkpoint)
     self.model.to(self.device)
     self.model.eval()
 

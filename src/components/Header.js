@@ -13,9 +13,10 @@ export default function Header({
   onToggleTalkback,
   onOpenServerSettings,
   serverOnline = null,
+  isOffline = false,
 }) {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isOffline && styles.containerOffline]}>
       <View style={styles.topRow}>
         {onBack ? (
           <TouchableOpacity
@@ -28,15 +29,26 @@ export default function Header({
             <MaterialCommunityIcons name="arrow-left" size={26} color={colors.white} />
           </TouchableOpacity>
         ) : (
-          <View style={styles.brandIconWrapper}>
-            <MaterialCommunityIcons name="sprout" size={26} color="#34D399" />
+          <View style={[styles.brandIconWrapper, isOffline && styles.brandIconWrapperOffline]}>
+            <MaterialCommunityIcons
+              name={isOffline ? 'cellphone-off' : 'sprout'}
+              size={26}
+              color={isOffline ? '#FCA5A5' : '#34D399'}
+            />
           </View>
         )}
 
         <View style={styles.titleContainer}>
-          <Text style={styles.title} numberOfLines={1}>
-            {title}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={styles.title} numberOfLines={1}>
+              {title}
+            </Text>
+            {isOffline && (
+              <View style={styles.offlinePillBadge}>
+                <Text style={styles.offlinePillText}>OFFLINE</Text>
+              </View>
+            )}
+          </View>
         </View>
 
         {/* Server Connection Settings Button */}
@@ -133,6 +145,27 @@ const styles = StyleSheet.create({
     borderBottomWidth: 3,
     borderBottomColor: colors.primaryDarkest,
     elevation: 6,
+  },
+  containerOffline: {
+    backgroundColor: '#991B1B',
+    borderBottomColor: '#7F1D1D',
+  },
+  brandIconWrapperOffline: {
+    backgroundColor: '#7F1D1D',
+    borderColor: '#EF4444',
+  },
+  offlinePillBadge: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginLeft: 8,
+  },
+  offlinePillText: {
+    color: colors.white,
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.8,
   },
   topRow: {
     flexDirection: 'row',

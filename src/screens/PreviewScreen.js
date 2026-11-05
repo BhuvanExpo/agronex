@@ -22,6 +22,7 @@ export default function PreviewScreen({
   onChangeLanguage,
   talkbackEnabled,
   onToggleTalkback,
+  isOfflineMode = false,
 }) {
   const strings = UI_STRINGS[currentLanguage] || UI_STRINGS.en;
   const activeLangObj = SUPPORTED_LANGUAGES.find((l) => l.id === currentLanguage);
@@ -48,15 +49,16 @@ export default function PreviewScreen({
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, isOfflineMode && { backgroundColor: '#FEF2F2' }]}>
       <Header
-        title={strings.previewTitle}
+        title={isOfflineMode ? `${strings.previewTitle} (OFFLINE)` : strings.previewTitle}
         onBack={() => handleAccessibleAction('back', strings.retakePhoto, onRetake)}
         activeLanguage={activeLangObj}
         onChangeLanguage={onChangeLanguage}
         showLanguageBadge={true}
         talkbackEnabled={talkbackEnabled}
         onToggleTalkback={onToggleTalkback}
+        isOffline={isOfflineMode}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>

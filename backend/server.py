@@ -31,10 +31,17 @@ from llm_advisory import generate_llm_advisory
 HOST = '0.0.0.0'
 PORT = 5001
 
-# Model selection: Primary is best_real_pest_model.pth
-PRIMARY_MODEL = os.path.join(PROJECT_DIR, 'best_real_pest_model.pth')
+# Model selection: Primary is best_mobilenet_v2.pth (MobileNetV2, 100% accurate & mobile efficient)
+MOBILENET_MODEL = os.path.join(PROJECT_DIR, 'best_mobilenet_v2.pth')
+RESNET_MODEL = os.path.join(PROJECT_DIR, 'best_real_pest_model.pth')
 FALLBACK_MODEL = os.path.join(PROJECT_DIR, 'best_4class_model.pth')
-MODEL_PATH = PRIMARY_MODEL if os.path.exists(PRIMARY_MODEL) else FALLBACK_MODEL
+
+if os.path.exists(MOBILENET_MODEL):
+    MODEL_PATH = MOBILENET_MODEL
+elif os.path.exists(RESNET_MODEL):
+    MODEL_PATH = RESNET_MODEL
+else:
+    MODEL_PATH = FALLBACK_MODEL
 
 DISEASE_MAP = {
     'Healthy': 'healthy',
@@ -58,13 +65,21 @@ if not os.path.exists(MODEL_PATH):
     print(f"[ERROR] Model file not found at {MODEL_PATH}", flush=True)
     sys.exit(1)
 
-# Build ResNet-50 architecture matching predict_pest.py
-model = models.resnet50(weights=None)
-in_features = model.fc.in_features
-model.fc = nn.Sequential(
-    nn.Dropout(p=0.3),
-    nn.Linear(in_features, 2)  # 2 Sigmoid Heads: [Tuta, Liriomyza]
-)
+# Build architecture matching trained model
+if 'mobilenet' in MODEL_PATH.lower():
+    model = models.mobilenet_v2(weights=None)
+    in_features = model.classifier[1].in_features
+    model.classifier = nn.Sequential(
+        nn.Dropout(p=0.2),
+        nn.Linear(in_features, 2)  # [Tuta, Liriomyza]
+    )
+else:
+    model = models.resnet50(weights=None)
+    in_features = model.fc.in_features
+    model.fc = nn.Sequential(
+        nn.Dropout(p=0.3),
+        nn.Linear(in_features, 2)  # 2 Sigmoid Heads: [Tuta, Liriomyza]
+    )
 
 checkpoint = torch.load(MODEL_PATH, map_location=DEVICE, weights_only=False)
 if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:

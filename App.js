@@ -7,6 +7,7 @@ import PreviewScreen from './src/screens/PreviewScreen';
 import FarmerDetailsScreen from './src/screens/FarmerDetailsScreen';
 import LoadingScreen from './src/screens/LoadingScreen';
 import AdvisoryScreen from './src/screens/AdvisoryScreen';
+import OfflineModelRunner from './src/components/OfflineModelRunner';
 import { stopSpeech } from './src/utils/audio';
 import { colors } from './src/utils/theme';
 
@@ -27,6 +28,9 @@ export default function App() {
     age: 'vegetative',
     variety: 'hybrid',
   });
+
+  // Global Online vs Offline Mode state
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
 
   // Handle hardware Android Back Button properly
   useEffect(() => {
@@ -132,8 +136,12 @@ export default function App() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" backgroundColor={colors.primaryDark} />
+    <View style={[styles.container, isOfflineMode && styles.containerOffline]}>
+      <OfflineModelRunner />
+      <StatusBar
+        style="light"
+        backgroundColor={isOfflineMode ? '#991B1B' : colors.primaryDark}
+      />
 
       {currentScreen === 'language' && (
         <LanguageScreen
@@ -152,6 +160,8 @@ export default function App() {
           onImagesSelected={handleImagesSelected}
           talkbackEnabled={talkbackEnabled}
           onToggleTalkback={handleToggleTalkback}
+          isOfflineMode={isOfflineMode}
+          onToggleOfflineMode={(val) => setIsOfflineMode(val)}
         />
       )}
 
@@ -164,6 +174,7 @@ export default function App() {
           onChangeLanguage={handleChangeLanguage}
           talkbackEnabled={talkbackEnabled}
           onToggleTalkback={handleToggleTalkback}
+          isOfflineMode={isOfflineMode}
         />
       )}
 
@@ -175,6 +186,7 @@ export default function App() {
           onChangeLanguage={handleChangeLanguage}
           talkbackEnabled={talkbackEnabled}
           onToggleTalkback={handleToggleTalkback}
+          isOfflineMode={isOfflineMode}
         />
       )}
 
@@ -183,7 +195,8 @@ export default function App() {
           images={selectedImages}
           currentLanguage={selectedLanguage}
           farmerData={farmerData}
-          fallbackHint={activeDiseaseId}
+          fallbackHint={null}
+          isOfflineMode={isOfflineMode}
           onAnalysisComplete={handleAnalysisComplete}
         />
       )}
@@ -199,6 +212,7 @@ export default function App() {
           onChangeLanguage={handleChangeLanguage}
           talkbackEnabled={talkbackEnabled}
           onToggleTalkback={handleToggleTalkback}
+          isOfflineMode={isOfflineMode}
         />
       )}
     </View>
@@ -209,5 +223,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.slate50,
+  },
+  containerOffline: {
+    backgroundColor: '#FEF2F2',
   },
 });

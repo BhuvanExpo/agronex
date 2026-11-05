@@ -20,6 +20,7 @@ export default function FarmerDetailsScreen({
   onChangeLanguage,
   talkbackEnabled,
   onToggleTalkback,
+  isOfflineMode = false,
 }) {
   const strings = UI_STRINGS[currentLanguage] || UI_STRINGS.en;
   const activeLangObj = SUPPORTED_LANGUAGES.find((l) => l.id === currentLanguage);
@@ -97,15 +98,16 @@ export default function FarmerDetailsScreen({
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, isOfflineMode && { backgroundColor: '#FEF2F2' }]}>
       <Header
-        title={strings.farmerDataTitle}
+        title={isOfflineMode ? `${strings.farmerDataTitle} (OFFLINE)` : strings.farmerDataTitle}
         onBack={onBack}
         activeLanguage={activeLangObj}
         onChangeLanguage={onChangeLanguage}
         showLanguageBadge={true}
         talkbackEnabled={talkbackEnabled}
         onToggleTalkback={onToggleTalkback}
+        isOffline={isOfflineMode}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
