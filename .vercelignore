@@ -1,0 +1,6 @@
+# Ignore heavy training sets and server artifacts
+model train/
+backend/server.log
+backend/last_uploaded.jpg
+*.pth
+*.pt

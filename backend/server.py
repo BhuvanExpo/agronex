@@ -362,7 +362,48 @@ class AgroNexRequestHandler(BaseHTTPRequestHandler):
         self._set_cors_headers(200)
 
     def do_GET(self):
-        if self.path in ('/', '/health'):
+        # Serve static assets if requested
+        clean_path = self.path.split('?')[0]
+        if clean_path.startswith('/assets/'):
+            asset_subpath = clean_path.lstrip('/')
+            local_asset_path = os.path.join(PROJECT_DIR, asset_subpath)
+            if not os.path.exists(local_asset_path):
+                local_asset_path = os.path.join(PROJECT_DIR, '..', asset_subpath)
+            
+            if os.path.exists(local_asset_path) and os.path.isfile(local_asset_path):
+                content_type = 'application/octet-stream'
+                if local_asset_path.endswith('.png'):
+                    content_type = 'image/png'
+                elif local_asset_path.endswith('.jpg') or local_asset_path.endswith('.jpeg'):
+                    content_type = 'image/jpeg'
+                elif local_asset_path.endswith('.js'):
+                    content_type = 'application/javascript'
+                elif local_asset_path.endswith('.css'):
+                    content_type = 'text/css'
+                
+                try:
+                    with open(local_asset_path, 'rb') as f:
+                        data = f.read()
+                    self._set_cors_headers(200, content_type=content_type)
+                    self.wfile.write(data)
+                    return
+                except Exception as e:
+                    print(f"[STATIC] Error reading {local_asset_path}: {e}")
+
+        # Serve landing page HTML on root GET if browser visits
+        accept_header = self.headers.get('Accept', '')
+        if clean_path in ('/', '/index.html') and ('text/html' in accept_header or clean_path == '/index.html'):
+            landing_path = os.path.join(PROJECT_DIR, 'index.html')
+            if not os.path.exists(landing_path):
+                landing_path = os.path.join(PROJECT_DIR, '..', 'index.html')
+            if os.path.exists(landing_path):
+                with open(landing_path, 'rb') as f:
+                    html_data = f.read()
+                self._set_cors_headers(200, content_type='text/html; charset=utf-8')
+                self.wfile.write(html_data)
+                return
+
+        if clean_path in ('/', '/health'):
             response_data = {
                 'status': 'online',
                 'app': 'AgroNex Production Tomato Pest Server',
